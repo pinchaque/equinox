@@ -14,8 +14,16 @@ func TestCreate(t *testing.T) {
 		t.Errorf("Got %s, wanted %s", p.ts.UTC(), ts.UTC())
 	}
 
+	if p.vals == nil {
+		t.Errorf("Values is nil")
+	}
+
 	if len(p.vals) != 0 {
 		t.Errorf("Expected 0 values, got %d", len(p.vals))
+	}
+
+	if p.attrs == nil {
+		t.Errorf("Attrs is nil")
 	}
 
 	if len(p.attrs) != 0 {
