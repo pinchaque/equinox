@@ -3,6 +3,7 @@ package equinox
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"time"
 )
 
@@ -24,15 +25,71 @@ func NewSerializer() *Serializer {
 
 func (s *Serializer) Deserialize(b []byte) (*Point, error) {
 	buf := bytes.NewReader(b)
+	var i, numvals uint32
 
+	// read timestamp and create the point
 	var umicro int64
 	err := binary.Read(buf, byteord, &umicro)
 	if err != nil {
 		return nil, err
 	}
-
 	p := NewPoint(time.UnixMicro(umicro).UTC())
 
+	// values
+	err = binary.Read(buf, byteord, &numvals)
+	if err != nil {
+		return nil, err
+	}
+	for i = 0; i < numvals; i++ {
+		var k uint32
+		var v float64
+		err = binary.Read(buf, byteord, &k)
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Read(buf, byteord, &v)
+		if err != nil {
+			return nil, err
+		}
+		str, exists := s.valkey.AtIndex(k)
+		if !exists {
+			return nil, fmt.Errorf("failed to find value key for index %d", k)
+		}
+
+		p.vals[str] = v
+	}
+
+	// attributes
+	err = binary.Read(buf, byteord, &numvals)
+	if err != nil {
+		return nil, err
+	}
+	for i = 0; i < numvals; i++ {
+		var k, v uint32
+		err = binary.Read(buf, byteord, &k)
+		if err != nil {
+			return nil, err
+		}
+
+		err = binary.Read(buf, byteord, &v)
+		if err != nil {
+			return nil, err
+		}
+		var kstr, vstr string
+		var exists bool
+		kstr, exists = s.attrkey.AtIndex(k)
+		if !exists {
+			return nil, fmt.Errorf("failed to find attr key for index %d", k)
+		}
+
+		vstr, exists = s.attrval.AtIndex(v)
+		if !exists {
+			return nil, fmt.Errorf("failed to find attr value for index %d", k)
+		}
+
+		p.attrs[kstr] = vstr
+	}
 	return p, nil
 }
 
