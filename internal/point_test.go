@@ -1,6 +1,8 @@
 package equinox
 
 import (
+	"fmt"
+	"maps"
 	"math"
 	"testing"
 	"time"
@@ -62,23 +64,11 @@ func TestSerialize(t *testing.T) {
 		t.Errorf("Expected %s, got %s", p.ts.UTC(), p2.ts.UTC())
 	}
 
-	if len(p2.vals) != len(p.vals) {
-		t.Errorf("Expected %d values, got %d", len(p.vals), len(p2.vals))
+	if !maps.EqualFunc(p2.vals, p.vals, floatEqual) {
+		t.Errorf("Expected vals '%s' got '%s'", fmt.Sprint(p.vals), fmt.Sprint(p2.vals))
 	}
 
-	for k, v := range p.vals {
-		if !floatEqual(v, p2.vals[k]) {
-			t.Errorf("Expected vals[%s] to be %f, got %f", k, v, p2.vals[k])
-		}
-	}
-
-	if len(p2.attrs) != len(p.attrs) {
-		t.Errorf("Expected %d values, got %d", len(p.attrs), len(p2.attrs))
-	}
-
-	for k, v := range p.attrs {
-		if p2.attrs[k] != v {
-			t.Errorf("Expected attrs[%s] to be %s, got %s", k, v, p2.attrs[k])
-		}
+	if !maps.Equal(p2.attrs, p.attrs) {
+		t.Errorf("Expected attrs '%s' got '%s'", fmt.Sprint(p.attrs), fmt.Sprint(p2.attrs))
 	}
 }
