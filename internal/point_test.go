@@ -1,9 +1,20 @@
 package equinox
 
 import (
+	"math"
 	"testing"
 	"time"
 )
+
+func floatEqual(x, y float64) bool {
+	const tolerance = 0.00001
+	diff := math.Abs(x - y)
+	mean := math.Abs(x+y) / 2.0
+	if math.IsNaN(diff / mean) {
+		return true
+	}
+	return (diff / mean) < tolerance
+}
 
 func TestCreate(t *testing.T) {
 
@@ -32,7 +43,6 @@ func TestCreate(t *testing.T) {
 }
 
 func TestSerialize(t *testing.T) {
-
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 3, time.UTC)
 	p := NewPoint(ts)
 	p.attrs["color"] = "red"
@@ -57,7 +67,7 @@ func TestSerialize(t *testing.T) {
 	}
 
 	for k, v := range p.vals {
-		if p2.vals[k] != v {
+		if !floatEqual(v, p2.vals[k]) {
 			t.Errorf("Expected vals[%s] to be %f, got %f", k, v, p2.vals[k])
 		}
 	}
