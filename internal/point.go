@@ -14,11 +14,3 @@ func NewPoint(ts time.Time) *Point {
 	p.attrs = make(map[string]string)
 	return &p
 }
-
-func Deserialize([]byte) *Point {
-	return NewPoint(time.Now())
-}
-
-func (p *Point) Serialize() ([]byte, error) {
-	return make([]byte, 512), nil
-}
