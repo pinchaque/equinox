@@ -33,7 +33,7 @@ func (s *Serializer) Serialize(p *Point) ([]byte, error) {
 	}
 	for key, val := range p.vals {
 		// write key
-		err = binary.Write(&buf, ord, s.valkey.GetIndex(key))
+		err = binary.Write(&buf, ord, s.valkey.ToIndex(key))
 		if err != nil {
 			return nil, err
 		}
@@ -52,13 +52,13 @@ func (s *Serializer) Serialize(p *Point) ([]byte, error) {
 	}
 	for key, val := range p.attrs {
 		// write key
-		err = binary.Write(&buf, ord, s.attrkey.GetIndex(key))
+		err = binary.Write(&buf, ord, s.attrkey.ToIndex(key))
 		if err != nil {
 			return nil, err
 		}
 
 		// write value
-		err = binary.Write(&buf, ord, s.attrval.GetIndex(val))
+		err = binary.Write(&buf, ord, s.attrval.ToIndex(val))
 		if err != nil {
 			return nil, err
 		}

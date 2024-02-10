@@ -18,35 +18,32 @@ func (m *AttrMap) Length() uint32 {
 	return m.numattr
 }
 
-func (m *AttrMap) GetIndex(idx uint32) (string, bool) {
+func (m *AttrMap) AtIndex(idx uint32) (string, bool) {
 	v, exist := m.int2str[idx]
 	return v, exist
 }
 
-func (m *AttrMap) GetAttr(s string) (uint32, bool) {
-	v, exist := m.str2int[s]
-	return v, exist
-}
-
 func (m *AttrMap) HasIndex(idx uint32) bool {
-	_, exist := m.GetIndex(idx)
+	_, exist := m.int2str[idx]
 	return exist
 }
 
 func (m *AttrMap) HasAttr(s string) bool {
-	_, exist := m.GetAttr(s)
+	_, exist := m.str2int[s]
 	return exist
 }
 
-func (m *AttrMap) AddAttr(s string) (uint32, bool) {
-	idx, exist := m.GetAttr(s)
+// Transforms given attribute to an index, creating it in the map if it doesn't
+// already exist
+func (m *AttrMap) ToIndex(s string) uint32 {
+	idx, exist := m.str2int[s]
 	if exist {
-		return idx, true
+		return idx
 	}
 
 	idx = m.numattr
 	m.numattr++
 	m.int2str[idx] = s
 	m.str2int[s] = idx
-	return idx, false
+	return idx
 }
