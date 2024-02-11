@@ -1,13 +1,12 @@
 package equinox
 
 import (
-	"maps"
 	"testing"
 	"time"
 )
 
 func TestSerialize(t *testing.T) {
-	ts := time.Date(2024, 01, 10, 23, 1, 2, 3, time.UTC)
+	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	const exptime string = "2024-01-10T23:01:02.000000Z"
 	const fmtstr string = "2006-01-02T15:04:05.000000Z"
 
@@ -42,19 +41,8 @@ func TestSerialize(t *testing.T) {
 		t.Errorf("Deserialization error: %s", err.Error())
 	}
 
-	if p2.ts.UnixMicro() != p.ts.UnixMicro() {
-		t.Errorf("Expected %d, got %d", p.ts.UnixMicro(), p2.ts.UnixMicro())
+	if !p2.Equal(p) {
+		t.Errorf("Expected %s, got %s", p.String(), p2.String())
 	}
 
-	if p2.ts.Format(fmtstr) != exptime {
-		t.Errorf("Expected %s got %s", exptime, p2.ts.Format(fmtstr))
-	}
-
-	if !maps.EqualFunc(p2.vals, p.vals, floatEqual) {
-		t.Errorf("Expected vals '%v' got '%v'", p.vals, p2.vals)
-	}
-
-	if !maps.Equal(p2.attrs, p.attrs) {
-		t.Errorf("Expected attrs '%v' got '%v'", p.attrs, p2.attrs)
-	}
 }

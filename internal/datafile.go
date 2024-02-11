@@ -23,7 +23,7 @@ func (df *DataFile) CloseFile() error {
 	return df.fd.Close()
 }
 
-func (df *DataFile) Write(idx int, p Point) error {
+func (df *DataFile) Write(idx int, p *Point) error {
 	return nil
 }
 
