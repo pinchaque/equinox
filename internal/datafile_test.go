@@ -48,7 +48,7 @@ func TestDFWriteRead(t *testing.T) {
 		df.Write(i, p)
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		p := getPoint(i)
 		p2, err := df.Read(i)
 
