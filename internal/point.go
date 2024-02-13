@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"math"
+	"sort"
 	"strings"
 	"time"
 )
@@ -27,10 +28,12 @@ func (p *Point) String() string {
 	for k, v := range p.vals {
 		val = append(val, k+": "+fmt.Sprintf("%f", v))
 	}
+	sort.Strings(val)
 
 	for k, v := range p.attrs {
 		attr = append(attr, k+": "+v)
 	}
+	sort.Strings(attr)
 
 	return fmt.Sprintf("[%s] val[%s] attr[%s]",
 		p.ts.UTC(),

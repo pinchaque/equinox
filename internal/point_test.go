@@ -34,8 +34,8 @@ func TestPointCreateEmpty(t *testing.T) {
 func newPointComplete() *Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPoint(ts)
-	p.attrs["color"] = "red"
 	p.attrs["shape"] = "square"
+	p.attrs["color"] = "red"
 	p.vals["area"] = 43.1
 	p.vals["temp"] = 21.1
 	return p
