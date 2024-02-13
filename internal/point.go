@@ -28,12 +28,12 @@ func (p *Point) String() string {
 	for k, v := range p.vals {
 		val = append(val, k+": "+fmt.Sprintf("%f", v))
 	}
-	sort.Strings(val)
+	sort.Strings(val) // ensure consistent output
 
 	for k, v := range p.attrs {
 		attr = append(attr, k+": "+v)
 	}
-	sort.Strings(attr)
+	sort.Strings(attr) // ensure consistent output
 
 	return fmt.Sprintf("[%s] val[%s] attr[%s]",
 		p.ts.UTC(),
