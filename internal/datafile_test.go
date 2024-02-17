@@ -1,11 +1,8 @@
 package equinox
 
 import (
-	"fmt"
-	"math"
 	"os"
 	"testing"
-	"time"
 )
 
 func tempFileName() (string, error) {
@@ -16,20 +13,6 @@ func tempFileName() (string, error) {
 	defer f.Close()
 	defer os.Remove(f.Name())
 	return f.Name(), nil
-}
-
-func getPoint(i uint32) *Point {
-	ts := time.Date(2024, 01, 10, 23, 1, 2, 3, time.UTC)
-	dur, err := time.ParseDuration(fmt.Sprintf("%dm", i))
-	if err != nil {
-		panic(err)
-	}
-	p := NewPoint(ts.Add(dur))
-	p.attrs["color"] = fmt.Sprintf("clr%d", i)
-	p.attrs["shape"] = fmt.Sprintf("shp%d", i)
-	p.vals["area"] = math.Sin(float64(i))
-	p.vals["temp"] = math.Cos(float64(i))
-	return p
 }
 
 func TestDFNew(t *testing.T) {
