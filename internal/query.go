@@ -8,6 +8,8 @@ import (
 )
 
 type Cursor interface {
+	// Fetches the next n results from the cursor. Returns a nil slice if there
+	// are no more to return.
 	Fetch(n int) ([]*Point, error)
 }
 

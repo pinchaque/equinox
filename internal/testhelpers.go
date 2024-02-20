@@ -10,7 +10,7 @@ import (
 )
 
 func getPoint(i uint32) *Point {
-	ts := time.Date(2024, 01, 10, 23, 1, 2, 3, time.UTC)
+	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	dur, err := time.ParseDuration(fmt.Sprintf("%dm", i))
 	if err != nil {
 		panic(err)
@@ -79,12 +79,33 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())
 	}
 
-	var results []*Point
-	j := 1
-	// TODO figure out how many to fetch and validate that it got how many we asked for
-	results, err = cur.Fetch(j)
-	if err != nil {
-		t.Fatalf("unexpected error when fetching %d results for query %s: %s", j, q.String(), err.Error())
+	// fetch results in batches
+	var results, rbatch []*Point
+	batchsize := 10
+	for {
+		rbatch, err = cur.Fetch(batchsize)
+
+		if err != nil {
+			t.Fatalf("unexpected error when fetching %d results for query %s: %s", batchsize, q.String(), err.Error())
+			return
+		}
+
+		// read the last one
+		if len(rbatch) == 0 {
+			break
+		}
+
+		// how many we expected back; should be batchsize unless there aren't that many left
+		expsize := batchsize
+		if len(results)+expsize > len(exp) {
+			expsize = len(exp) - len(results)
+		}
+		if expsize != len(rbatch) {
+			t.Fatalf("unexpected # results fetched for query %s: expected %d got %d", q.String(), expsize, batchsize)
+			break
+		}
+
+		results = append(results, rbatch...)
 	}
 
 	cmpQResults(t, q, exp, results)
