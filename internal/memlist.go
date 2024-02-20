@@ -14,6 +14,10 @@ func NewMemList() *MemList {
 	return &ml
 }
 
+func (ml *MemList) String() string {
+	return "MemList"
+}
+
 func (ml *MemList) Add(p []*Point) error {
 	return nil
 }

@@ -41,12 +41,14 @@ func (p *Point) String() string {
 		strings.Join(attr, ", "))
 }
 
+// equal (including exact floating point equality)
 func (p *Point) Equal(other *Point) bool {
 	return (p.ts.UnixMicro() == other.ts.UnixMicro() &&
 		maps.Equal(p.vals, other.vals) &&
 		maps.Equal(p.attrs, other.attrs))
 }
 
+// equal within a given floating point tolerance
 func (p *Point) EqualTol(other *Point, tol float64) bool {
 	cmp := func(x, y float64) bool {
 		diff := math.Abs(x - y)

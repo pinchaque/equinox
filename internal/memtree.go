@@ -14,6 +14,10 @@ func NewMemTree() *MemTree {
 	return &mt
 }
 
+func (mt *MemTree) String() string {
+	return "MemTree"
+}
+
 func (mt *MemTree) Add(p []*Point) error {
 	return nil
 }
