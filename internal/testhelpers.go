@@ -43,8 +43,13 @@ func getPoints(a uint32, n int) []*Point {
 		ps = append(ps, getPoint(uint32(i)+a))
 	}
 
-	rand.Shuffle(n, func(i, j int) { ps[i], ps[j] = ps[j], ps[i] })
+	return ps
+}
 
+// gets n points starting at a, in random order
+func getPointsShuffle(a uint32, n int) []*Point {
+	ps := getPoints(a, n)
+	rand.Shuffle(n, func(i, j int) { ps[i], ps[j] = ps[j], ps[i] })
 	return ps
 }
 
@@ -56,9 +61,8 @@ func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 	}
 
 	// sort by ascending time
-	fn := func(a, b *Point) int { return int(a.ts.UnixMicro() - b.ts.UnixMicro()) }
-	slices.SortFunc(exp, fn)
-	slices.SortFunc(act, fn)
+	slices.SortFunc(exp, PointCmp)
+	slices.SortFunc(act, PointCmp)
 
 	// now compare one at a time
 	for i := 0; i < len(exp); i++ {
@@ -112,9 +116,8 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 }
 
 func testPointIO(t *testing.T, io PointIO, n int, batch int) {
-	exp := getPoints(0, n)
-	t.Logf("testing %s with %d points and batch size %d", io.String(), n, batch)
-	t.Logf("generated %d points", len(exp))
+	exp := getPointsShuffle(0, n)
+	t.Logf("testing %s with %d points and batch size %d", io.Name(), n, batch)
 
 	var err error
 	var mints, maxts time.Time
