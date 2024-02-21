@@ -22,9 +22,8 @@ func NewPoint(ts time.Time) *Point {
 	return &p
 }
 
-// function to sort points
-// returns -1 if a < b, 0 if equal, 1 if b > a
-func PointCmp(a, b *Point) int {
+// Compare function to sort points by time only. Returns -1 if a < b, 0 if equal, 1 if b > a.
+func PointCmpTime(a, b *Point) int {
 	if a.ts.UnixMicro() < b.ts.UnixMicro() {
 		return -1
 	} else if a.ts.UnixMicro() > b.ts.UnixMicro() {
@@ -32,6 +31,11 @@ func PointCmp(a, b *Point) int {
 	} else {
 		return 0
 	}
+}
+
+// Compare function to sort points by all fields including attributes. Returns -1 if a < b, 0 if equal, 1 if b > a.
+func PointCmp(a, b *Point) int {
+	return PointCmpTime(a, b)
 }
 
 func (p *Point) String() string {
