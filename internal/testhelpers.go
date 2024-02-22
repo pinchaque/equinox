@@ -56,8 +56,6 @@ func getPointsShuffle(a uint32, n int) []*Point {
 func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 	if len(exp) != len(act) {
 		t.Fatalf("unexpected # of results for query %s: expected %d got %d", q.String(), len(exp), len(act))
-	} else {
-		t.Logf("num results for query %s: expected %d got %d", q.String(), len(exp), len(act))
 	}
 
 	// sort by ascending time
@@ -68,8 +66,6 @@ func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 	for i := 0; i < len(exp); i++ {
 		if !exp[i].Equal(act[i]) {
 			t.Errorf("unexpected point returned; got %s expected %s", act[i].String(), exp[i].String())
-		} else {
-			t.Logf("expected point returned; got %s expected %s", act[i].String(), exp[i].String())
 		}
 
 	}
@@ -82,8 +78,6 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 	if err != nil {
 		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())
 	}
-
-	t.Logf("expecting to get %d points for query %s", len(exp), q.String())
 
 	// fetch results in batches
 	var results []*Point
@@ -106,7 +100,6 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 		if len(results)+expsize > len(exp) {
 			expsize = len(exp) - len(results)
 		}
-		t.Logf("expsize:%d batchsize:%d len(results):%d len(exp):%d len(rbatch):%d", expsize, batchsize, len(results), len(exp), len(rbatch))
 
 		if expsize != len(rbatch) {
 			t.Fatalf("unexpected # results fetched for query %s: expected %d got %d", q.String(), expsize, len(rbatch))
@@ -121,7 +114,7 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 
 func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 	exp := getPointsShuffle(0, n)
-	t.Logf("testing %s with %d points and batch size %d", io.Name(), n, batch)
+	//t.Logf("testing %s with %d points and batch size %d", io.Name(), n, batch)
 
 	var err error
 	var mints, maxts time.Time

@@ -106,14 +106,14 @@ type MemListCursor struct {
 	q *Query        // query params
 }
 
-func (mlc MemListCursor) fetch(n int) ([]*Point, error) {
+func (mlc *MemListCursor) fetch(n int) ([]*Point, error) {
 	if mlc.e == nil {
 		// either the list was empty or we've already fetched everything
 		return nil, nil
 	}
 
 	// prealloc buffer for points
-	r := make([]*Point, n)
+	r := make([]*Point, 0, n)
 
 	// iterate until we've filled the buffer or we're at the end of the list
 	for ; len(r) < n && mlc.e != nil; mlc.e = mlc.e.Next() {
@@ -135,6 +135,6 @@ func (mlc MemListCursor) fetch(n int) ([]*Point, error) {
 }
 
 func (ml *MemList) Search(q *Query) (*QueryExec, error) {
-	cur := MemListCursor{q: q, e: ml.buf.Front()}
-	return NewQueryExec(q, cur), nil
+	mlc := &MemListCursor{q: q, e: ml.buf.Front()}
+	return NewQueryExec(q, mlc), nil
 }
