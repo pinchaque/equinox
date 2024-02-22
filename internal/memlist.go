@@ -102,23 +102,15 @@ func (ml *MemList) Vacuum() error {
 }
 
 type MemListCursor struct {
-	q     *Query
-	eprev *list.Element // last element returned
-	eof   bool          // whether we've hit end of query already
+	e *list.Element // element where we start the search
+	q *Query        // query params
 }
 
-func NewMemListCursor(q *Query) *MemListCursor {
-	mlc := MemListCursor{}
-	mlc.q = q
-	mlc.eprev = nil
-	mlc.eof = false
-	return &mlc
-}
-
-func (mlc *MemListCursor) Fetch(n int) ([]*Point, error) {
+func (mlc MemListCursor) Fetch(n int) ([]*Point, error) {
 	return nil, nil
 }
 
-func (ml *MemList) Search(q *Query) (Cursor, error) {
-	return NewMemListCursor(q), nil
+func (ml *MemList) Search(q *Query) (*QueryExec, error) {
+	cur := MemListCursor{q: q, e: ml.buf.Front()}
+	return NewQueryExec(q, cur), nil
 }

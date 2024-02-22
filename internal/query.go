@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-type Cursor interface {
-	// Fetches the next n results from the cursor. Returns a nil slice if there
-	// are no more to return.
-	Fetch(n int) ([]*Point, error)
-}
-
 // Represents the parameters for a query of points from the database. All queries
 // must specify a time range as [start, end] and these are inclusive values.
 // Queries may additionally specify attributes to filter on.
