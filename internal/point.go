@@ -22,6 +22,22 @@ func NewPoint(ts time.Time) *Point {
 	return &p
 }
 
+// Compare function to sort points by time only. Returns -1 if a < b, 0 if equal, 1 if b > a.
+func PointCmpTime(a, b *Point) int {
+	if a.ts.UnixMicro() < b.ts.UnixMicro() {
+		return -1
+	} else if a.ts.UnixMicro() > b.ts.UnixMicro() {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+// Compare function to sort points by all fields including attributes. Returns -1 if a < b, 0 if equal, 1 if b > a.
+func PointCmp(a, b *Point) int {
+	return PointCmpTime(a, b)
+}
+
 func (p *Point) String() string {
 	var val, attr []string
 
@@ -41,12 +57,14 @@ func (p *Point) String() string {
 		strings.Join(attr, ", "))
 }
 
+// equal (including exact floating point equality)
 func (p *Point) Equal(other *Point) bool {
 	return (p.ts.UnixMicro() == other.ts.UnixMicro() &&
 		maps.Equal(p.vals, other.vals) &&
 		maps.Equal(p.attrs, other.attrs))
 }
 
+// equal within a given floating point tolerance
 func (p *Point) EqualTol(other *Point, tol float64) bool {
 	cmp := func(x, y float64) bool {
 		diff := math.Abs(x - y)
