@@ -39,5 +39,5 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*Point, error) {
 }
 
 func (mt *MemTree) Search(q *Query) (Cursor, error) {
-	return NewMemTreeCursor(), nil
+	return nil, nil
 }

@@ -65,5 +65,5 @@ func (q *Query) MatchAttr(p *Point) bool {
 // Returns true if the point matches both the time range and attributes specified
 // by this query, false otherwise.
 func (q *Query) Match(p *Point) bool {
-	return q.MatchAttr(p) && q.CmpTime(p) == 0
+	return q.CmpTime(p) == 0 && q.MatchAttr(p)
 }

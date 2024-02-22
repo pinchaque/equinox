@@ -78,16 +78,18 @@ func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp []*Point) {
 
 	q := NewQuery(mints, maxts)
-	cur, err := io.Search(q)
+	qe, err := io.Search(q)
 	if err != nil {
 		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())
 	}
 
+	t.Logf("expecting to get %d points for query %s", len(exp), q.String())
+
 	// fetch results in batches
-	var results, rbatch []*Point
+	var results []*Point
 	batchsize := 10
 	for {
-		rbatch, err = cur.Fetch(batchsize)
+		rbatch, err := qe.Fetch(batchsize)
 
 		if err != nil {
 			t.Fatalf("unexpected error when fetching %d results for query %s: %s", batchsize, q.String(), err.Error())
@@ -104,8 +106,10 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 		if len(results)+expsize > len(exp) {
 			expsize = len(exp) - len(results)
 		}
+		t.Logf("expsize:%d batchsize:%d len(results):%d len(exp):%d len(rbatch):%d", expsize, batchsize, len(results), len(exp), len(rbatch))
+
 		if expsize != len(rbatch) {
-			t.Fatalf("unexpected # results fetched for query %s: expected %d got %d", q.String(), expsize, batchsize)
+			t.Fatalf("unexpected # results fetched for query %s: expected %d got %d", q.String(), expsize, len(rbatch))
 			break
 		}
 
