@@ -1,6 +1,8 @@
 package equinox
 
 import (
+	"fmt"
+
 	"github.com/google/btree"
 )
 
@@ -14,12 +16,20 @@ func NewMemTree() *MemTree {
 	return &mt
 }
 
+func (mt *MemTree) Name() string {
+	return "MemTree"
+}
+
 func (mt *MemTree) String() string {
 	return "MemTree"
 }
 
 func (mt *MemTree) Add(p []*Point) error {
-	return nil
+	return fmt.Errorf("not implemented")
+}
+
+func (mt *MemTree) Len() int {
+	return 0
 }
 
 func (mt *MemTree) Vacuum() error {
@@ -29,15 +39,10 @@ func (mt *MemTree) Vacuum() error {
 type MemTreeCursor struct {
 }
 
-func NewMemTreeCursor() *MemTreeCursor {
-	mtc := MemTreeCursor{}
-	return &mtc
+func (mtc *MemTreeCursor) fetch(n int) ([]*Point, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
-func (mtc *MemTreeCursor) Fetch(n int) ([]*Point, error) {
-	return nil, nil
-}
-
-func (mt *MemTree) Search(q *Query) (Cursor, error) {
-	return nil, nil
+func (mt *MemTree) Search(q *Query) (*QueryExec, error) {
+	return nil, fmt.Errorf("not implemented")
 }
