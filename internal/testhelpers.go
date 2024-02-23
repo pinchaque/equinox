@@ -114,7 +114,7 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 
 func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 	exp := getPointsShuffle(0, n)
-	//t.Logf("testing %s with %d points and batch size %d", io.Name(), n, batch)
+	t.Logf("testing %s with %d points and batch size %d", io.Name(), n, batch)
 
 	var err error
 	var mints, maxts time.Time
