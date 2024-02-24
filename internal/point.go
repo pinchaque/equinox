@@ -57,6 +57,11 @@ func (p *Point) String() string {
 		strings.Join(attr, ", "))
 }
 
+// Returns true if this point is less than the other
+func (p *Point) Less(oth *Point) bool {
+	return PointCmpTime(p, oth) < 0
+}
+
 // equal (including exact floating point equality)
 func (p *Point) Equal(other *Point) bool {
 	return (p.ts.UnixMicro() == other.ts.UnixMicro() &&
