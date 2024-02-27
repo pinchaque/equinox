@@ -42,13 +42,13 @@ func TestAttrString(t *testing.T) {
 		}
 	}
 
-	fn(t, NewQACmp("color", "blue", Equal), "color == 'blue'")
-	fn(t, NewQACmp("color", "blue", Regex), "color =~ 'blue'")
+	fn(t, NewQACmp("color", "blue", QA_EQ), "color == 'blue'")
+	fn(t, NewQACmp("color", "blue", QA_REGEX), "color =~ 'blue'")
 }
 
 func TestAttrEqual(t *testing.T) {
 	a := getAttrs()
-	op := Equal
+	op := QA_EQ
 	runQATest(t, a, NewQACmp("color", "blue", op), true)
 	runQATest(t, a, NewQACmp("color", "red", op), false)
 	runQATest(t, a, NewQACmp("flavor", "sour", op), false) // missing
