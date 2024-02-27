@@ -90,6 +90,13 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 			return
 		}
 
+		if false {
+			t.Logf("===== Got batch of %d points ====", len(rbatch))
+			for i := 0; i < len(rbatch); i++ {
+				t.Logf("[%d] %s", i, rbatch[i].String())
+			}
+		}
+
 		// read the last one
 		if len(rbatch) == 0 {
 			break

@@ -7,12 +7,13 @@ import (
 )
 
 type MemTree struct {
-	buf *btree.BTree
+	buf *btree.BTreeG[*Point]
 }
 
 func NewMemTree() *MemTree {
+	fn := func(a, b *Point) bool { return a.Less(b) }
 	mt := MemTree{}
-	mt.buf = btree.New(2)
+	mt.buf = btree.NewG(2, fn)
 	return &mt
 }
 
@@ -22,10 +23,6 @@ func (mt *MemTree) Name() string {
 
 func (mt *MemTree) String() string {
 	return "MemTree"
-}
-
-func (p *Point) Less(oth btree.Item) bool {
-	return PointCmpTime(p, oth.(*Point)) < 0
 }
 
 func (mt *MemTree) Add(ps []*Point) error {
@@ -44,11 +41,11 @@ func (mt *MemTree) Vacuum() error {
 }
 
 type MemTreeCursor struct {
-	mt  *MemTree // reference to MemTree object
-	st  *Point   // point where we start the search
-	end *Point   // point where we end the search
-	q   *Query   // query params
-
+	mt   *MemTree // reference to MemTree object
+	st   *Point   // point where we start the search
+	end  *Point   // point where we end the search
+	last *Point   // last point returned
+	q    *Query   // query params
 }
 
 func (mtc *MemTreeCursor) fetch(n int) ([]*Point, error) {
@@ -65,14 +62,21 @@ func (mtc *MemTreeCursor) fetch(n int) ([]*Point, error) {
 		// update starting point to current point
 		mtc.st = NewPoint(p.ts)
 
-		// if we're already full then we need to stop now
+		// if we're already full then we need to stop now and we'll try this
+		// point again on the next call to fetch
 		if len(r) >= n {
 			return false
 		}
 
-		// add matching points
+		// add point if it matches
 		if mtc.q.Match(p) {
-			r = append(r, p)
+			// don't add it if it matches the previous returned point
+			// this fixes an edge case where AscendRange stops naturally on
+			// an added point
+			if mtc.last == nil || !mtc.last.Equal(p) {
+				r = append(r, p)
+				mtc.last = p // remember last point added
+			}
 		}
 
 		// TODO: we need strict ordering and avoid duplicates. GUID would help!
@@ -91,7 +95,7 @@ func (mt *MemTree) Search(q *Query) (*QueryExec, error) {
 	// AscendRange uses < not <=
 	end := NewPoint(time.UnixMicro(q.end.UnixMicro() + 1))
 
-	mlc := &MemTreeCursor{q: q, st: st, end: end}
+	mlc := &MemTreeCursor{mt: mt, q: q, st: st, end: end}
 	return NewQueryExec(q, mlc), nil
 
 }
