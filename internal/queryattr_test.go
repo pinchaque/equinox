@@ -34,9 +34,12 @@ func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
 	}
 }
 
-func TestAttrBasic(t *testing.T) {
-	attrs := getAttrs()
-
-	runQATest(t, attrs, NewQAEqual("color", "blue"), true)
-	runQATest(t, attrs, NewQAEqual("color", "red"), false)
+func TestAttrEqual(t *testing.T) {
+	a := getAttrs()
+	runQATest(t, a, NewQAEqual("color", "blue"), true)
+	runQATest(t, a, NewQAEqual("color", "red"), false)
+	runQATest(t, a, NewQAEqual("flavor", "sour"), false) // missing
+	runQATest(t, a, NewQAEqual("color", "Blue"), false)  // case sensitive
+	runQATest(t, a, NewQAEqual("Color", "blue"), false)  // case sensitive
+	runQATest(t, a, NewQAEqual("color", "blu"), false)   // contains
 }

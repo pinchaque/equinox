@@ -24,7 +24,14 @@ type QAEqual struct {
 }
 
 func (qa *QAEqual) Match(attrs map[string]string) bool {
-	return true
+	for k, v := range attrs {
+		if k == qa.k {
+			return v == qa.v
+		}
+	}
+
+	// if the attribute doesn't exist then it's not a match
+	return false
 }
 
 func (qa *QAEqual) String() string {

@@ -60,6 +60,7 @@ func (q *Query) CmpTime(p *Point) int {
 // Does not check the point against the time range.
 func (q *Query) MatchAttr(p *Point) bool {
 	return true
+	// TODO implement this
 }
 
 // Returns true if the point matches both the time range and attributes specified
