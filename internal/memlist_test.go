@@ -65,6 +65,11 @@ func TestMemListConstructBatches(t *testing.T) {
 }
 
 func TestMemListQuery(t *testing.T) {
-	ml := NewMemList()
-	testPointIO(t, ml, 10, 5)
+	testPointIO(t, NewMemList(), 10, 5)
+	testPointIO(t, NewMemList(), 10, 10)
+	testPointIO(t, NewMemList(), 10, 4)
+	testPointIO(t, NewMemList(), 10, 1)
+	testPointIO(t, NewMemList(), 100, 9)
+	testPointIO(t, NewMemList(), 1000, 49)
+	testPointIO(t, NewMemList(), 1000, 50)
 }
