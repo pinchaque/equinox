@@ -34,12 +34,25 @@ func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
 	}
 }
 
+func TestAttrString(t *testing.T) {
+
+	fn := func(t *testing.T, q *QACmp, exp string) {
+		if q.String() != exp {
+			t.Errorf("operator string: expected %s got %s", exp, q.String())
+		}
+	}
+
+	fn(t, NewQACmp("color", "blue", Equal), "color == 'blue'")
+	fn(t, NewQACmp("color", "blue", Regex), "color =~ 'blue'")
+}
+
 func TestAttrEqual(t *testing.T) {
 	a := getAttrs()
-	runQATest(t, a, NewQAEqual("color", "blue"), true)
-	runQATest(t, a, NewQAEqual("color", "red"), false)
-	runQATest(t, a, NewQAEqual("flavor", "sour"), false) // missing
-	runQATest(t, a, NewQAEqual("color", "Blue"), false)  // case sensitive
-	runQATest(t, a, NewQAEqual("Color", "blue"), false)  // case sensitive
-	runQATest(t, a, NewQAEqual("color", "blu"), false)   // contains
+	op := Equal
+	runQATest(t, a, NewQACmp("color", "blue", op), true)
+	runQATest(t, a, NewQACmp("color", "red", op), false)
+	runQATest(t, a, NewQACmp("flavor", "sour", op), false) // missing
+	runQATest(t, a, NewQACmp("color", "Blue", op), false)  // case sensitive
+	runQATest(t, a, NewQACmp("Color", "blue", op), false)  // case sensitive
+	runQATest(t, a, NewQACmp("color", "blu", op), false)   // contains
 }
