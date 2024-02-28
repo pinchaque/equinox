@@ -34,24 +34,30 @@ func (q *Query) String() string {
 // query. Returns -1 if the point is before the range, 0 if within, 1 after.
 // Does not check the point against the attributes for the query.
 func (q *Query) CmpTime(p *Point) int {
-	if p.ts.UnixMicro() < q.start.UnixMicro() {
+	if p.Ts.UnixMicro() < q.start.UnixMicro() {
 		return -1
-	} else if p.ts.UnixMicro() > q.end.UnixMicro() {
+	} else if p.Ts.UnixMicro() > q.end.UnixMicro() {
 		return 1
 	} else {
 		return 0
 	}
 }
 
+// Returns true if the given point matches the time specified by this query,
+// false otherwise. Does not check the point against attributes.
+func (q *Query) MatchTime(p *Point) bool {
+	return q.CmpTime(p) == 0
+}
+
 // Returns true if the given point matches the attributes for this query,
 // false otherwise. If the query has no attributes then all points will match.
 // Does not check the point against the time range.
 func (q *Query) MatchAttr(p *Point) bool {
-	return q.qa.Match(p.attrs)
+	return q.qa.Match(p.Attrs)
 }
 
 // Returns true if the point matches both the time range and attributes specified
 // by this query, false otherwise.
 func (q *Query) Match(p *Point) bool {
-	return q.CmpTime(p) == 0 && q.MatchAttr(p)
+	return q.MatchTime(p) && q.MatchAttr(p)
 }

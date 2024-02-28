@@ -10,34 +10,34 @@ func TestPointCreateEmpty(t *testing.T) {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPoint(ts)
 
-	if ts != p.ts {
-		t.Errorf("Got %s, wanted %s", p.ts.UTC(), ts.UTC())
+	if ts != p.Ts {
+		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
 	}
 
-	if p.vals == nil {
+	if p.Vals == nil {
 		t.Errorf("Values is nil")
 	}
 
-	if len(p.vals) != 0 {
-		t.Errorf("Expected 0 values, got %d", len(p.vals))
+	if len(p.Vals) != 0 {
+		t.Errorf("Expected 0 values, got %d", len(p.Vals))
 	}
 
-	if p.attrs == nil {
+	if p.Attrs == nil {
 		t.Errorf("Attrs is nil")
 	}
 
-	if len(p.attrs) != 0 {
-		t.Errorf("Expected 0 attributes, got %d", len(p.attrs))
+	if len(p.Attrs) != 0 {
+		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
 	}
 }
 
 func newPointComplete() *Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPoint(ts)
-	p.attrs["shape"] = "square"
-	p.attrs["color"] = "red"
-	p.vals["area"] = 43.1
-	p.vals["temp"] = 21.1
+	p.Attrs["shape"] = "square"
+	p.Attrs["color"] = "red"
+	p.Vals["area"] = 43.1
+	p.Vals["temp"] = 21.1
 	return p
 }
 
@@ -53,16 +53,16 @@ func TestPointCreateComplete(t *testing.T) {
 	p := newPointComplete()
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 
-	if ts != p.ts {
-		t.Errorf("Got %s, wanted %s", p.ts.UTC(), ts.UTC())
+	if ts != p.Ts {
+		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
 	}
 
-	if len(p.vals) != 2 {
-		t.Errorf("Expected 2 values, got %d", len(p.vals))
+	if len(p.Vals) != 2 {
+		t.Errorf("Expected 2 values, got %d", len(p.Vals))
 	}
 
-	if len(p.attrs) != 2 {
-		t.Errorf("Expected 2 attributes, got %d", len(p.attrs))
+	if len(p.Attrs) != 2 {
+		t.Errorf("Expected 2 attributes, got %d", len(p.Attrs))
 	}
 }
 
@@ -78,7 +78,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // different timestamp
 		p2 := newPointComplete()
-		p2.ts = p2.ts.AddDate(0, 0, 1)
+		p2.Ts = p2.Ts.AddDate(0, 0, 1)
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -86,7 +86,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // changed value
 		p2 := newPointComplete()
-		p2.vals["area"] = 43.1004
+		p2.Vals["area"] = 43.1004
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -122,7 +122,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // add value
 		p2 := newPointComplete()
-		p2.vals["area2"] = 49.999
+		p2.Vals["area2"] = 49.999
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -130,7 +130,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // delete value
 		p2 := newPointComplete()
-		delete(p2.vals, "area")
+		delete(p2.Vals, "area")
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -138,7 +138,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // changed attr
 		p2 := newPointComplete()
-		p2.attrs["color"] = "blue"
+		p2.Attrs["color"] = "blue"
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -146,7 +146,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // add attr
 		p2 := newPointComplete()
-		p2.attrs["color2"] = "blue"
+		p2.Attrs["color2"] = "blue"
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -154,7 +154,7 @@ func TestPointEqual(t *testing.T) {
 
 	{ // delete attr
 		p2 := newPointComplete()
-		delete(p2.attrs, "color")
+		delete(p2.Attrs, "color")
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}

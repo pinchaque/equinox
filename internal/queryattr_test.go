@@ -1,37 +1,15 @@
 package equinox
 
 import (
-	"sort"
-	"strings"
 	"testing"
 )
-
-func getAttrs() map[string]string {
-	r := make(map[string]string)
-	r["color"] = "blue"
-	r["animal"] = "moose"
-	r["shape"] = "square"
-	r["index"] = "74"
-	return r
-}
-
-func attrsToString(attrs map[string]string) string {
-	var attr []string
-
-	for k, v := range attrs {
-		attr = append(attr, k+": "+v)
-	}
-	sort.Strings(attr) // ensure consistent output
-
-	return strings.Join(attr, ", ")
-}
 
 func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
 	result := qa.Match(attrs)
 
 	if result != exp {
 		t.Errorf("QueryAttr: attrs{{{%s}}} and query{{{%s}}} expected %t got %t",
-			attrsToString(attrs), qa.String(), exp, result)
+			testAttrsToString(attrs), qa.String(), exp, result)
 	}
 }
 
@@ -59,12 +37,12 @@ func TestAttrString(t *testing.T) {
 }
 
 func TestAttrTrue(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 	runQATest(t, a, NewQATrue(), true)
 }
 
 func TestAttrExists(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 	runQATest(t, a, NewQAExists("color"), true)
 	runQATest(t, a, NewQAExists("animal"), true)
 	runQATest(t, a, NewQAExists("shape"), true)
@@ -74,7 +52,7 @@ func TestAttrExists(t *testing.T) {
 }
 
 func TestAttrEqual(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 	runQATest(t, a, NewQAEqual("color", "blue"), true)
 	runQATest(t, a, NewQAEqual("color", "red"), false)
 	runQATest(t, a, NewQAEqual("flavor", "sour"), false) // missing
@@ -84,7 +62,7 @@ func TestAttrEqual(t *testing.T) {
 }
 
 func TestAttrRegex(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 	runQATest(t, a, NewQARegex("color", "blue"), true)
 	runQATest(t, a, NewQARegex("color", "red"), false)
 	runQATest(t, a, NewQARegex("flavor", "sour"), false) // missing
@@ -109,7 +87,7 @@ func TestAttrRegex(t *testing.T) {
 }
 
 func TestAttrNot(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 
 	// things that are true
 	t1 := NewQAEqual("color", "blue")
@@ -134,7 +112,7 @@ func TestAttrNot(t *testing.T) {
 }
 
 func TestAttrAnd(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 
 	// things that are true
 	t1 := NewQAEqual("color", "blue")
@@ -159,7 +137,7 @@ func TestAttrAnd(t *testing.T) {
 }
 
 func TestAttrOr(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 
 	// things that are true
 	t1 := NewQAEqual("color", "blue")
@@ -183,7 +161,7 @@ func TestAttrOr(t *testing.T) {
 	runQATest(t, a, NewQAOr(f1, f2, f3, f4), false)
 }
 func TestAttrLogicCombo(t *testing.T) {
-	a := getAttrs()
+	a := testGetAttrs()
 
 	// things that are true
 	t1 := NewQAEqual("color", "blue")

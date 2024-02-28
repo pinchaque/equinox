@@ -126,7 +126,7 @@ func (mlc *MemListCursor) fetch(n int) ([]*Point, error) {
 
 		// since the list is ordered by time, we know there can't be more
 		// results if the current list elem is after the query end time
-		if p.ts.UnixMicro() > mlc.q.end.UnixMicro() {
+		if p.Ts.UnixMicro() > mlc.q.end.UnixMicro() {
 			mlc.e = nil // nothing more to look at
 		}
 	}

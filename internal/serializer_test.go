@@ -16,10 +16,10 @@ func TestSerialize(t *testing.T) {
 	}
 
 	p := NewPoint(ts)
-	p.attrs["color"] = "red"
-	p.attrs["shape"] = "square"
-	p.vals["area"] = 43.1
-	p.vals["temp"] = 21.1
+	p.Attrs["color"] = "red"
+	p.Attrs["shape"] = "square"
+	p.Vals["area"] = 43.1
+	p.Vals["temp"] = 21.1
 
 	s := NewSerializer()
 

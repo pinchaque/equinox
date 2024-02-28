@@ -10,23 +10,23 @@ import (
 )
 
 type Point struct {
-	ts    time.Time
-	vals  map[string]float64
-	attrs map[string]string
+	Ts    time.Time
+	Vals  map[string]float64
+	Attrs map[string]string
 }
 
 func NewPoint(ts time.Time) *Point {
-	p := Point{ts: ts}
-	p.vals = make(map[string]float64)
-	p.attrs = make(map[string]string)
+	p := Point{Ts: ts}
+	p.Vals = make(map[string]float64)
+	p.Attrs = make(map[string]string)
 	return &p
 }
 
 // Compare function to sort points by time only. Returns -1 if a < b, 0 if equal, 1 if b > a.
 func PointCmpTime(a, b *Point) int {
-	if a.ts.UnixMicro() < b.ts.UnixMicro() {
+	if a.Ts.UnixMicro() < b.Ts.UnixMicro() {
 		return -1
-	} else if a.ts.UnixMicro() > b.ts.UnixMicro() {
+	} else if a.Ts.UnixMicro() > b.Ts.UnixMicro() {
 		return 1
 	} else {
 		return 0
@@ -41,18 +41,18 @@ func PointCmp(a, b *Point) int {
 func (p *Point) String() string {
 	var val, attr []string
 
-	for k, v := range p.vals {
+	for k, v := range p.Vals {
 		val = append(val, k+": "+fmt.Sprintf("%f", v))
 	}
 	sort.Strings(val) // ensure consistent output
 
-	for k, v := range p.attrs {
+	for k, v := range p.Attrs {
 		attr = append(attr, k+": "+v)
 	}
 	sort.Strings(attr) // ensure consistent output
 
 	return fmt.Sprintf("[%s] val[%s] attr[%s]",
-		p.ts.UTC(),
+		p.Ts.UTC(),
 		strings.Join(val, ", "),
 		strings.Join(attr, ", "))
 }
@@ -64,9 +64,9 @@ func (p *Point) Less(oth *Point) bool {
 
 // equal (including exact floating point equality)
 func (p *Point) Equal(other *Point) bool {
-	return (p.ts.UnixMicro() == other.ts.UnixMicro() &&
-		maps.Equal(p.vals, other.vals) &&
-		maps.Equal(p.attrs, other.attrs))
+	return (p.Ts.UnixMicro() == other.Ts.UnixMicro() &&
+		maps.Equal(p.Vals, other.Vals) &&
+		maps.Equal(p.Attrs, other.Attrs))
 }
 
 // equal within a given floating point tolerance
@@ -80,7 +80,7 @@ func (p *Point) EqualTol(other *Point, tol float64) bool {
 		return (diff / mean) < tol
 	}
 
-	return (p.ts.UnixMicro() == other.ts.UnixMicro() &&
-		maps.EqualFunc(p.vals, other.vals, cmp) &&
-		maps.Equal(p.attrs, other.attrs))
+	return (p.Ts.UnixMicro() == other.Ts.UnixMicro() &&
+		maps.EqualFunc(p.Vals, other.Vals, cmp) &&
+		maps.Equal(p.Attrs, other.Attrs))
 }
