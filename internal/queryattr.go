@@ -17,6 +17,23 @@ type QueryAttr interface {
 }
 
 /****************************************************************************
+	QATrue
+****************************************************************************/
+
+// Always returns true; useful as a no-op
+type QATrue struct{}
+
+// Always returns true
+func (qa *QATrue) Match(attrs map[string]string) bool { return true }
+
+func (qa *QATrue) String() string { return "true" }
+
+// Returns new QATrue object
+func NewQATrue() *QATrue {
+	return &QATrue{}
+}
+
+/****************************************************************************
 	QAExist - Exists
 ****************************************************************************/
 

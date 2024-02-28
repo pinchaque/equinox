@@ -43,6 +43,7 @@ func TestAttrString(t *testing.T) {
 		}
 	}
 
+	fn(t, NewQATrue(), "true")
 	fn(t, NewQAEqual("color", "blue"), "color == 'blue'")
 	fn(t, NewQARegex("color", "blue"), "color =~ /blue/")
 	fn(t, NewQAExists("color"), "color exists")
@@ -55,6 +56,11 @@ func TestAttrString(t *testing.T) {
 	fn(t, NewQAOr(t2, t3), "(animal == 'moose') || (shape == 'square')")
 	fn(t, NewQAAnd(t2, t3), "(animal == 'moose') && (shape == 'square')")
 	fn(t, NewQAAnd(t2, NewQANot(t3)), "(animal == 'moose') && (!(shape == 'square'))")
+}
+
+func TestAttrTrue(t *testing.T) {
+	a := getAttrs()
+	runQATest(t, a, NewQATrue(), true)
 }
 
 func TestAttrExists(t *testing.T) {

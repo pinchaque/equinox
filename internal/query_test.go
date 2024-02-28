@@ -9,14 +9,14 @@ func TestCreate(t *testing.T) {
 	t2 := time.Date(2024, 01, 12, 13, 0, 0, 0, time.UTC)
 	t4 := time.Date(2024, 01, 14, 13, 0, 0, 0, time.UTC)
 
-	q := NewQuery(t2, t4)
-	exp := "[2024-01-12 13:00:00 +0000 UTC-2024-01-14 13:00:00 +0000 UTC] []"
+	q := NewQuery(t2, t4, NewQATrue())
+	exp := "[2024-01-12 13:00:00 +0000 UTC-2024-01-14 13:00:00 +0000 UTC] [true]"
 	if q.String() != exp {
 		t.Errorf("expected string %s got %s", exp, q.String())
 	}
 
 	// make sure start/end inversion is accounted for
-	q = NewQuery(t4, t2)
+	q = NewQuery(t4, t2, NewQATrue())
 	if q.String() != exp {
 		t.Errorf("expected string %s got %s", exp, q.String())
 	}
@@ -29,7 +29,7 @@ func TestCmpTime(t *testing.T) {
 	t4 := time.Date(2024, 01, 14, 13, 0, 0, 0, time.UTC)
 	t5 := time.Date(2024, 01, 15, 13, 0, 0, 0, time.UTC)
 
-	q := NewQuery(t2, t4)
+	q := NewQuery(t2, t4, NewQATrue())
 
 	fn := func(ts time.Time, exp int) {
 		act := q.CmpTime(NewPoint(ts))

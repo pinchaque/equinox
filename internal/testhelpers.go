@@ -73,7 +73,7 @@ func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 
 func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp []*Point) {
 
-	q := NewQuery(mints, maxts)
+	q := NewQuery(mints, maxts, NewQATrue())
 	qe, err := io.Search(q)
 	if err != nil {
 		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())

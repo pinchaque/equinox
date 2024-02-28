@@ -2,8 +2,6 @@ package equinox
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 	"time"
 )
 
@@ -13,33 +11,23 @@ import (
 type Query struct {
 	start time.Time
 	end   time.Time
-	attrs map[string]string
+	qa    QueryAttr
 }
 
-func NewQuery(start time.Time, end time.Time) *Query {
-	q := Query{start: start, end: end}
+func NewQuery(start time.Time, end time.Time, qa QueryAttr) *Query {
+	q := Query{start: start, end: end, qa: qa}
 
 	// ensure times are in correct order
 	if start.UnixMicro() > end.UnixMicro() {
 		q.start, q.end = q.end, q.start
 	}
-	q.attrs = make(map[string]string)
+
 	return &q
 }
 
 // Returns string representation of the query
 func (q *Query) String() string {
-	var attr []string
-
-	for k, v := range q.attrs {
-		attr = append(attr, k+": "+v)
-	}
-	sort.Strings(attr) // ensure consistent output
-
-	return fmt.Sprintf("[%s-%s] [%s]",
-		q.start.UTC(),
-		q.end.UTC(),
-		strings.Join(attr, ", "))
+	return fmt.Sprintf("[%s-%s] [%s]", q.start.UTC(), q.end.UTC(), q.qa.String())
 }
 
 // Checks whether the given point is within the time range specified by the
@@ -59,8 +47,7 @@ func (q *Query) CmpTime(p *Point) int {
 // false otherwise. If the query has no attributes then all points will match.
 // Does not check the point against the time range.
 func (q *Query) MatchAttr(p *Point) bool {
-	return true
-	// TODO implement this
+	return q.qa.Match(p.attrs)
 }
 
 // Returns true if the point matches both the time range and attributes specified
