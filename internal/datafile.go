@@ -189,7 +189,7 @@ func (df *DataFile) Read(idx uint32) (*Point, error) {
 
 	// if the timestamp is 0 then we consider this an invalid read because
 	// we must have written sparse points to the file
-	if p.ts.UnixMicro() == 0 {
+	if p.Ts.UnixMicro() == 0 {
 		return nil, fmt.Errorf("read empty timestamp at index %d: %s", idx, p.String())
 	}
 

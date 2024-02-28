@@ -5,9 +5,31 @@ import (
 	"math"
 	"math/rand"
 	"slices"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 )
+
+func testAttrsToString(attrs map[string]string) string {
+	var attr []string
+
+	for k, v := range attrs {
+		attr = append(attr, k+": "+v)
+	}
+	sort.Strings(attr) // ensure consistent output
+
+	return strings.Join(attr, ", ")
+}
+
+func testGetAttrs() map[string]string {
+	r := make(map[string]string)
+	r["color"] = "blue"
+	r["animal"] = "moose"
+	r["shape"] = "square"
+	r["index"] = "74"
+	return r
+}
 
 func getPoint(i uint32) *Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
@@ -24,11 +46,11 @@ func getPoint(i uint32) *Point {
 	colors := [...]string{"red", "green", "blue", "yellow", "orange", "purple", "pink", "gray", "black", "white"}
 
 	p := NewPoint(ts.Add(dur))
-	p.attrs["color"] = colors[r.Intn(len(colors))]
-	p.attrs["shape"] = shapes[r.Intn(len(shapes))]
-	p.attrs["animal"] = animals[r.Intn(len(animals))]
-	p.vals["area"] = math.Sin(float64(i))
-	p.vals["temp"] = math.Cos(float64(i))
+	p.Attrs["color"] = colors[r.Intn(len(colors))]
+	p.Attrs["shape"] = shapes[r.Intn(len(shapes))]
+	p.Attrs["animal"] = animals[r.Intn(len(animals))]
+	p.Vals["area"] = math.Sin(float64(i))
+	p.Vals["temp"] = math.Cos(float64(i))
 	return p
 }
 
@@ -73,7 +95,7 @@ func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 
 func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp []*Point) {
 
-	q := NewQuery(mints, maxts)
+	q := NewQuery(mints, maxts, NewQATrue())
 	qe, err := io.Search(q)
 	if err != nil {
 		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())
@@ -132,14 +154,14 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 
 		// remember max and min timestamps
 		if i == 0 {
-			mints = p.ts
-			maxts = p.ts
+			mints = p.Ts
+			maxts = p.Ts
 		} else {
-			if p.ts.Before(mints) {
-				mints = p.ts
+			if p.Ts.Before(mints) {
+				mints = p.Ts
 			}
-			if p.ts.After(maxts) {
-				maxts = p.ts
+			if p.Ts.After(maxts) {
+				maxts = p.Ts
 			}
 		}
 

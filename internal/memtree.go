@@ -60,7 +60,7 @@ func (mtc *MemTreeCursor) fetch(n int) ([]*Point, error) {
 	// func that gets called on each iteration
 	iter := func(p *Point) bool {
 		// update starting point to current point
-		mtc.st = NewPoint(p.ts)
+		mtc.st = NewPoint(p.Ts)
 
 		// if we're already full then we need to stop now and we'll try this
 		// point again on the next call to fetch

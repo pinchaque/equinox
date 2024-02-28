@@ -57,7 +57,7 @@ func (s *Serializer) Deserialize(b []byte) (*Point, error) {
 			return nil, fmt.Errorf("failed to find value key for index %d", k)
 		}
 
-		p.vals[str] = v
+		p.Vals[str] = v
 	}
 
 	// attributes
@@ -88,7 +88,7 @@ func (s *Serializer) Deserialize(b []byte) (*Point, error) {
 			return nil, fmt.Errorf("failed to find attr value for index %d", k)
 		}
 
-		p.attrs[kstr] = vstr
+		p.Attrs[kstr] = vstr
 	}
 	return p, nil
 }
@@ -112,17 +112,17 @@ func (s *Serializer) Serialize(p *Point) ([]byte, error) {
 	var buf bytes.Buffer
 
 	// timestamp => 64-bit = 8 bytes
-	err := binary.Write(&buf, byteord, p.ts.UnixMicro())
+	err := binary.Write(&buf, byteord, p.Ts.UnixMicro())
 	if err != nil {
 		return nil, err
 	}
 
 	// values: key -> value pairs
-	err = binary.Write(&buf, byteord, uint32(len(p.vals)))
+	err = binary.Write(&buf, byteord, uint32(len(p.Vals)))
 	if err != nil {
 		return nil, err
 	}
-	for key, val := range p.vals {
+	for key, val := range p.Vals {
 		// write key
 		err = binary.Write(&buf, byteord, s.valkey.ToIndex(key))
 		if err != nil {
@@ -137,11 +137,11 @@ func (s *Serializer) Serialize(p *Point) ([]byte, error) {
 	}
 
 	// attributes: key -> value pairs
-	err = binary.Write(&buf, byteord, uint32(len(p.attrs)))
+	err = binary.Write(&buf, byteord, uint32(len(p.Attrs)))
 	if err != nil {
 		return nil, err
 	}
-	for key, val := range p.attrs {
+	for key, val := range p.Attrs {
 		// write key
 		err = binary.Write(&buf, byteord, s.attrkey.ToIndex(key))
 		if err != nil {
