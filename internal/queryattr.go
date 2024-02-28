@@ -1,6 +1,9 @@
 package equinox
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+)
 
 // This is the generic interface for querying against attributes that is used
 // within the Query object as well as in composite attribute queries.
@@ -13,65 +16,65 @@ type QueryAttr interface {
 }
 
 /*
-	not
-	and
-	or
+	TODO: not and or
 */
 
-// Represents an operator used for QACmp
-type QAOp int64
+/****************************************************************************
+	QAEqual - Equality
+****************************************************************************/
 
-const (
-	QA_EQ QAOp = iota
-	QA_REGEX
-)
-
-// String representation of the operator.
-func (s QAOp) String() string {
-	switch s {
-	case QA_EQ:
-		return "=="
-	case QA_REGEX:
-		return "=~"
-	}
-	return "???"
-}
-
-// Represents an attribute comparison for a given key using a specified
-// operator.
-type QACmp struct {
-	k  string
-	v  string
-	op QAOp
+// Represents an attribute equality comparison for a given key
+type QAEqual struct {
+	k string
+	v string
 }
 
 // Returns true if this query attribute comparison matches the given attribute
 // map.
-func (qa *QACmp) Match(attrs map[string]string) bool {
-	for k, v := range attrs {
-		if k == qa.k {
-			switch qa.op {
-			case QA_EQ:
-				return v == qa.v
-			case QA_REGEX:
-				return false
-			default:
-				return false // invalid operator
-			}
-		}
-	}
+func (qa *QAEqual) Match(attrs map[string]string) bool {
+	v, exists := attrs[qa.k]
 
 	// if the attribute doesn't exist then it's not a match
-	return false
+	// otherwise must be exact match
+	return exists && (v == qa.v)
 }
 
-func (qa *QACmp) String() string {
-	return fmt.Sprintf("%s %s '%s'", qa.k, qa.op.String(), qa.v)
+func (qa *QAEqual) String() string {
+	return fmt.Sprintf("%s == '%s'", qa.k, qa.v)
 }
 
-// Returns new QACmp object with specified attribute key, value, and comparison
-// operator.
-func NewQACmp(k string, v string, op QAOp) *QACmp {
-	qa := QACmp{k: k, v: v, op: op}
-	return &qa
+// Returns new QAEqual object with specified attribute key and value
+func NewQAEqual(k string, v string) *QAEqual {
+	return &QAEqual{k: k, v: v}
+}
+
+/****************************************************************************
+	QARegex - Regular Expression
+****************************************************************************/
+
+// Represents an attribute equality comparison for a given key
+type QARegex struct {
+	k  string
+	re *regexp.Regexp
+}
+
+// Returns true if this query attribute comparison matches the given attribute
+// map.
+func (qa *QARegex) Match(attrs map[string]string) bool {
+	v, exists := attrs[qa.k]
+
+	// if the attribute doesn't exist then it's not a match
+	// compare value to compiled regexp
+	return exists && qa.re.MatchString(v)
+}
+
+func (qa *QARegex) String() string {
+	return fmt.Sprintf("%s =~ /%s/", qa.k, qa.re.String())
+}
+
+// Returns new QARegex object with specified attribute key and regex to use
+// when comparing against values.
+func NewQARegex(k string, regex string) *QARegex {
+	re := regexp.MustCompile(regex)
+	return &QARegex{k: k, re: re}
 }
