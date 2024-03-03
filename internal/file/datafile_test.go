@@ -1,9 +1,37 @@
-package equinox
+package file
 
 import (
+	"equinox/internal/core"
+	"fmt"
+	"math"
+	"math/rand"
 	"os"
 	"testing"
+	"time"
 )
+
+func getPoint(i uint32) *core.Point {
+	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
+	dur, err := time.ParseDuration(fmt.Sprintf("%dm", i))
+	if err != nil {
+		panic(err)
+	}
+
+	s := rand.NewSource(ts.Unix()) // always use the same seed
+	r := rand.New(s)               // initialize local pseudorandom generator
+
+	animals := [...]string{"cat", "dog", "horse", "pig", "cow"}
+	shapes := [...]string{"circle", "square", "rhombus", "rectangle", "triangle", "pentagon"}
+	colors := [...]string{"red", "green", "blue", "yellow", "orange", "purple", "pink", "gray", "black", "white"}
+
+	p := core.NewPoint(ts.Add(dur))
+	p.Attrs["color"] = colors[r.Intn(len(colors))]
+	p.Attrs["shape"] = shapes[r.Intn(len(shapes))]
+	p.Attrs["animal"] = animals[r.Intn(len(animals))]
+	p.Vals["area"] = math.Sin(float64(i))
+	p.Vals["temp"] = math.Cos(float64(i))
+	return p
+}
 
 func tempFileName() (string, error) {
 	f, err := os.CreateTemp(os.TempDir(), "equinox-test-*")

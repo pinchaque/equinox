@@ -1,4 +1,4 @@
-package equinox
+package query
 
 import (
 	"fmt"

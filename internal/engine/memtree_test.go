@@ -1,4 +1,4 @@
-package equinox
+package engine
 
 import (
 	"testing"

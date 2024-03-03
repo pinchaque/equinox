@@ -1,4 +1,4 @@
-package equinox
+package core
 
 import (
 	"fmt"

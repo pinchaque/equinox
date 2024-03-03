@@ -1,13 +1,16 @@
-package equinox
+package query
 
-import "fmt"
+import (
+	"equinox/internal/core"
+	"fmt"
+)
 
 // Internal interface used by QueryExec to retrieve results from the diferent
 // data stores.
 type Cursor interface {
 	// Fetches the next n results from the cursor. Returns a nil slice if there
 	// are no more to return.
-	fetch(n int) ([]*Point, error)
+	Fetch(n int) ([]*core.Point, error)
 }
 
 type QueryExec struct {
@@ -24,7 +27,7 @@ func NewQueryExec(q *Query, cur Cursor) *QueryExec {
 // Fetches the next n results from the query. Returns empty slice (nil) if
 // there are no more. Returns an error if we aren't done but there was an
 // error in running the query.
-func (qe *QueryExec) Fetch(n int) ([]*Point, error) {
+func (qe *QueryExec) Fetch(n int) ([]*core.Point, error) {
 	if qe.done {
 		return nil, fmt.Errorf("Fetch called on query that was already Done: %s", qe.q.String())
 	}
@@ -33,7 +36,7 @@ func (qe *QueryExec) Fetch(n int) ([]*Point, error) {
 		return nil, fmt.Errorf("invalid n of %d when fetching results for query %s", n, qe.q.String())
 	}
 
-	r, err := qe.cur.fetch(n)
+	r, err := qe.cur.Fetch(n)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching results from cursor for query %s: %s", qe.q.String(), err.Error())
 	}

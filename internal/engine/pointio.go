@@ -1,10 +1,15 @@
-package equinox
+package engine
+
+import (
+	"equinox/internal/core"
+	"equinox/internal/query"
+)
 
 type PointIO interface {
-	Add(p []*Point) error
+	Add(p []*core.Point) error
 	Len() int
 	Vacuum() error
-	Search(q *Query) (*QueryExec, error)
+	Search(q *query.Query) (*query.QueryExec, error)
 	Name() string
 	String() string
 }

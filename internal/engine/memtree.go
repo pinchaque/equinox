@@ -1,17 +1,19 @@
-package equinox
+package engine
 
 import (
+	"equinox/internal/core"
+	"equinox/internal/query"
 	"time"
 
 	"github.com/google/btree"
 )
 
 type MemTree struct {
-	buf *btree.BTreeG[*Point]
+	buf *btree.BTreeG[*core.Point]
 }
 
 func NewMemTree() *MemTree {
-	fn := func(a, b *Point) bool { return a.Less(b) }
+	fn := func(a, b *core.Point) bool { return a.Less(b) }
 	mt := MemTree{}
 	mt.buf = btree.NewG(2, fn)
 	return &mt
@@ -25,7 +27,7 @@ func (mt *MemTree) String() string {
 	return "MemTree"
 }
 
-func (mt *MemTree) Add(ps []*Point) error {
+func (mt *MemTree) Add(ps []*core.Point) error {
 	for _, p := range ps {
 		mt.buf.ReplaceOrInsert(p)
 	}
@@ -41,26 +43,26 @@ func (mt *MemTree) Vacuum() error {
 }
 
 type MemTreeCursor struct {
-	mt   *MemTree // reference to MemTree object
-	st   *Point   // point where we start the search
-	end  *Point   // point where we end the search
-	last *Point   // last point returned
-	q    *Query   // query params
+	mt   *MemTree     // reference to MemTree object
+	st   *core.Point  // point where we start the search
+	end  *core.Point  // point where we end the search
+	last *core.Point  // last point returned
+	q    *query.Query // query params
 }
 
-func (mtc *MemTreeCursor) fetch(n int) ([]*Point, error) {
+func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 	if mtc.st == nil || mtc.end == nil || mtc.end.Less(mtc.st) {
 		// nothing to do if empty time range
 		return nil, nil
 	}
 
 	// prealloc buffer for points
-	r := make([]*Point, 0, n)
+	r := make([]*core.Point, 0, n)
 
 	// func that gets called on each iteration
-	iter := func(p *Point) bool {
+	iter := func(p *core.Point) bool {
 		// update starting point to current point
-		mtc.st = NewPoint(p.Ts)
+		mtc.st = core.NewPoint(p.Ts)
 
 		// if we're already full then we need to stop now and we'll try this
 		// point again on the next call to fetch
@@ -87,15 +89,15 @@ func (mtc *MemTreeCursor) fetch(n int) ([]*Point, error) {
 	return r, nil
 }
 
-func (mt *MemTree) Search(q *Query) (*QueryExec, error) {
+func (mt *MemTree) Search(q *query.Query) (*query.QueryExec, error) {
 	// starting point is what was specified in the query
-	st := NewPoint(q.start)
+	st := core.NewPoint(q.Start)
 
 	// ending point needs to be one microsecond past the query since
 	// AscendRange uses < not <=
-	end := NewPoint(time.UnixMicro(q.end.UnixMicro() + 1))
+	end := core.NewPoint(time.UnixMicro(q.End.UnixMicro() + 1))
 
 	mlc := &MemTreeCursor{mt: mt, q: q, st: st, end: end}
-	return NewQueryExec(q, mlc), nil
+	return query.NewQueryExec(q, mlc), nil
 
 }

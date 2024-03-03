@@ -1,6 +1,7 @@
-package equinox
+package file
 
 import (
+	"equinox/internal/core"
 	"testing"
 	"time"
 )
@@ -15,7 +16,7 @@ func TestSerialize(t *testing.T) {
 			exptime, ts.Format(fmtstr), ts.UTC())
 	}
 
-	p := NewPoint(ts)
+	p := core.NewPoint(ts)
 	p.Attrs["color"] = "red"
 	p.Attrs["shape"] = "square"
 	p.Vals["area"] = 43.1

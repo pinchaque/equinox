@@ -1,7 +1,9 @@
-package equinox
+package engine
 
 import (
 	"container/list"
+	"equinox/internal/core"
+	"equinox/internal/query"
 	"fmt"
 	"slices"
 	"strings"
@@ -26,14 +28,14 @@ func (ml *MemList) String() string {
 	var pstr []string
 	i := 0
 	for e := ml.buf.Front(); e != nil; e = e.Next() {
-		p := e.Value.(*Point)
+		p := e.Value.(*core.Point)
 		pstr = append(pstr, fmt.Sprintf("%d: %s", i, p.String()))
 		i++
 	}
 	return fmt.Sprintf("%s: {\n%s\n}", ml.Name(), strings.Join(pstr, "\n"))
 }
 
-func (ml *MemList) Add(ps []*Point) error {
+func (ml *MemList) Add(ps []*core.Point) error {
 	/*
 		we add the slice of points in two steps:
 		(1) sort the slice
@@ -50,7 +52,7 @@ func (ml *MemList) Add(ps []*Point) error {
 	}
 
 	// sort the points we're adding
-	slices.SortFunc(ps, PointCmp)
+	slices.SortFunc(ps, core.PointCmp)
 
 	// start inserting at the back of the list
 	e := ml.buf.Back()
@@ -64,7 +66,7 @@ func (ml *MemList) Add(ps []*Point) error {
 			i--
 			// keep e as nil because we just want to keep adding to the front
 			// we are guaranteed the next point will be before the last one
-		} else if PointCmp(e.Value.(*Point), p) <= 0 {
+		} else if core.PointCmp(e.Value.(*core.Point), p) <= 0 {
 			ml.buf.InsertAfter(p, e)
 			i--
 			// don't change e because we know the next ps[i] will come before
@@ -88,9 +90,9 @@ func (ml *MemList) validate() error {
 	}
 
 	for e := ml.buf.Front(); e.Next() != nil; e = e.Next() {
-		p1 := e.Value.(*Point)
-		p2 := e.Next().Value.(*Point)
-		if PointCmp(p1, p2) > 0 {
+		p1 := e.Value.(*core.Point)
+		p2 := e.Next().Value.(*core.Point)
+		if core.PointCmp(p1, p2) > 0 {
 			return fmt.Errorf("point (%s) incorrectly ordered before point (%s)", p1.String(), p2.String())
 		}
 	}
@@ -103,21 +105,21 @@ func (ml *MemList) Vacuum() error {
 
 type MemListCursor struct {
 	e *list.Element // element where we start the search
-	q *Query        // query params
+	q *query.Query  // query params
 }
 
-func (mlc *MemListCursor) fetch(n int) ([]*Point, error) {
+func (mlc *MemListCursor) Fetch(n int) ([]*core.Point, error) {
 	if mlc.e == nil {
 		// either the list was empty or we've already fetched everything
 		return nil, nil
 	}
 
 	// prealloc buffer for points
-	r := make([]*Point, 0, n)
+	r := make([]*core.Point, 0, n)
 
 	// iterate until we've filled the buffer or we're at the end of the list
 	for ; len(r) < n && mlc.e != nil; mlc.e = mlc.e.Next() {
-		p := mlc.e.Value.(*Point)
+		p := mlc.e.Value.(*core.Point)
 
 		// add matching points
 		if mlc.q.Match(p) {
@@ -126,7 +128,7 @@ func (mlc *MemListCursor) fetch(n int) ([]*Point, error) {
 
 		// since the list is ordered by time, we know there can't be more
 		// results if the current list elem is after the query end time
-		if p.Ts.UnixMicro() > mlc.q.end.UnixMicro() {
+		if p.Ts.UnixMicro() > mlc.q.End.UnixMicro() {
 			mlc.e = nil // nothing more to look at
 		}
 	}
@@ -134,7 +136,7 @@ func (mlc *MemListCursor) fetch(n int) ([]*Point, error) {
 	return r, nil
 }
 
-func (ml *MemList) Search(q *Query) (*QueryExec, error) {
+func (ml *MemList) Search(q *query.Query) (*query.QueryExec, error) {
 	mlc := &MemListCursor{q: q, e: ml.buf.Front()}
-	return NewQueryExec(q, mlc), nil
+	return query.NewQueryExec(q, mlc), nil
 }

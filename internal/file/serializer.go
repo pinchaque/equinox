@@ -1,8 +1,9 @@
-package equinox
+package file
 
 import (
 	"bytes"
 	"encoding/binary"
+	"equinox/internal/core"
 	"fmt"
 	"time"
 )
@@ -23,7 +24,7 @@ func NewSerializer() *Serializer {
 	return &s
 }
 
-func (s *Serializer) Deserialize(b []byte) (*Point, error) {
+func (s *Serializer) Deserialize(b []byte) (*core.Point, error) {
 	buf := bytes.NewReader(b)
 	var i, numvals uint32
 
@@ -33,7 +34,7 @@ func (s *Serializer) Deserialize(b []byte) (*Point, error) {
 	if err != nil {
 		return nil, err
 	}
-	p := NewPoint(time.UnixMicro(umicro).UTC())
+	p := core.NewPoint(time.UnixMicro(umicro).UTC())
 
 	// values
 	err = binary.Read(buf, byteord, &numvals)
@@ -108,7 +109,7 @@ Then for each entry:
 
 Expected size (bytes) =  16 + 12*num_values + 8*num_attrs
 */
-func (s *Serializer) Serialize(p *Point) ([]byte, error) {
+func (s *Serializer) Serialize(p *core.Point) ([]byte, error) {
 	var buf bytes.Buffer
 
 	// timestamp => 64-bit = 8 bytes

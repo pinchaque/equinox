@@ -1,8 +1,9 @@
-package equinox
+package file
 
 import (
 	"bytes"
 	"encoding/binary"
+	"equinox/internal/core"
 	"fmt"
 	"os"
 	"unsafe"
@@ -135,7 +136,7 @@ func (df *DataFile) getOffset(idx uint32) int64 {
 	return int64(df.header_size + idx*df.record_size)
 }
 
-func (df *DataFile) Write(idx uint32, p *Point) error {
+func (df *DataFile) Write(idx uint32, p *core.Point) error {
 	data, err := df.ser.Serialize(p)
 	if err != nil {
 		return err
@@ -159,7 +160,7 @@ func (df *DataFile) Write(idx uint32, p *Point) error {
 	return nil
 }
 
-func (df *DataFile) Read(idx uint32) (*Point, error) {
+func (df *DataFile) Read(idx uint32) (*core.Point, error) {
 	offset := df.getOffset(idx)
 	_, err := df.fd.Seek(offset, 0)
 	if err != nil {
@@ -180,7 +181,7 @@ func (df *DataFile) Read(idx uint32) (*Point, error) {
 			n, df.record_size)
 	}
 
-	var p *Point
+	var p *core.Point
 	p, err = df.ser.Deserialize(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize %d bytes fo data for index %d: %s",
