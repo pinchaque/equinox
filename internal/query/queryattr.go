@@ -29,7 +29,7 @@ func (qa *QATrue) Match(attrs map[string]string) bool { return true }
 func (qa *QATrue) String() string { return "true" }
 
 // Returns new QATrue object
-func NewQATrue() *QATrue {
+func True() *QATrue {
 	return &QATrue{}
 }
 
@@ -53,7 +53,7 @@ func (qa *QAExists) String() string {
 }
 
 // Returns new QAExists object with specified attribute key
-func NewQAExists(k string) *QAExists {
+func Exists(k string) *QAExists {
 	return &QAExists{k: k}
 }
 
@@ -82,7 +82,7 @@ func (qa *QAEqual) String() string {
 }
 
 // Returns new QAEqual object with specified attribute key and value
-func NewQAEqual(k string, v string) *QAEqual {
+func Equal(k string, v string) *QAEqual {
 	return &QAEqual{k: k, v: v}
 }
 
@@ -112,7 +112,7 @@ func (qa *QARegex) String() string {
 
 // Returns new QARegex object with specified attribute key and regex to use
 // when comparing against values.
-func NewQARegex(k string, regex string) *QARegex {
+func Regex(k string, regex string) *QARegex {
 	re := regexp.MustCompile(regex)
 	return &QARegex{k: k, re: re}
 }
@@ -137,7 +137,7 @@ func (qa *QANot) String() string {
 
 // Returns new QANot object that's the logical inversion of the specified
 // QueryAttr
-func NewQANot(qa QueryAttr) *QANot {
+func Not(qa QueryAttr) *QANot {
 	return &QANot{qa: qa}
 }
 
@@ -177,7 +177,7 @@ func (qa *QAAnd) String() string {
 
 // Returns new QAAnd object that's the logical inversion of the specified
 // QueryAttr
-func NewQAAnd(qa ...QueryAttr) *QAAnd {
+func And(qa ...QueryAttr) *QAAnd {
 	return &QAAnd{qa: qa}
 }
 
@@ -217,6 +217,6 @@ func (qa *QAOr) String() string {
 
 // Returns new QAOr object that's the logical inversion of the specified
 // QueryAttr
-func NewQAOr(qa ...QueryAttr) *QAOr {
+func Or(qa ...QueryAttr) *QAOr {
 	return &QAOr{qa: qa}
 }
