@@ -14,3 +14,5 @@ func TestMemTreeQuery(t *testing.T) {
 	testPointIO(t, NewMemTree(), 1000, 49)
 	testPointIO(t, NewMemTree(), 1000, 50)
 }
+
+// TODO test for strict ordering

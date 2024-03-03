@@ -3,6 +3,7 @@ package engine
 import (
 	"equinox/internal/core"
 	"equinox/internal/query"
+	"strings"
 	"time"
 
 	"github.com/google/btree"
@@ -13,7 +14,15 @@ type MemTree struct {
 }
 
 func NewMemTree() *MemTree {
-	fn := func(a, b *core.Point) bool { return a.Less(b) }
+	fn := func(a, b *core.Point) bool {
+		r := core.PointCmp(a, b)
+		if r == 0 {
+			// incorporate the UUID for strict ordering
+			r = strings.Compare(a.Uuid.String(), b.Uuid.String())
+		}
+
+		return r < 0
+	}
 	mt := MemTree{}
 	mt.buf = btree.NewG(2, fn)
 	return &mt
@@ -51,7 +60,7 @@ type MemTreeCursor struct {
 }
 
 func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
-	if mtc.st == nil || mtc.end == nil || mtc.end.Less(mtc.st) {
+	if mtc.st == nil || mtc.end == nil || core.PointCmp(mtc.end, mtc.st) < 0 {
 		// nothing to do if empty time range
 		return nil, nil
 	}

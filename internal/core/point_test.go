@@ -29,6 +29,10 @@ func TestPointCreateEmpty(t *testing.T) {
 	if len(p.Attrs) != 0 {
 		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
 	}
+
+	if p.Uuid.String() == "" {
+		t.Errorf("Expected a guid, got empty string")
+	}
 }
 
 func newPointComplete() *Point {
@@ -159,4 +163,44 @@ func TestPointEqual(t *testing.T) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
 	}
+}
+
+func TestPointIdentical(t *testing.T) {
+	/*
+		ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
+		p := NewPoint(ts)
+		p.Attrs["shape"] = "square"
+		p.Attrs["color"] = "red"
+		p.Vals["area"] = 43.1
+		p.Vals["temp"] = 21.1
+	*/
+
+	p1 := newPointComplete()
+	p2 := newPointComplete()
+
+	fn := func(pt1 *Point, pt2 *Point, act bool, exp bool) {
+		if act != exp {
+			t.Errorf("Expected identity %t got %t: [%s]%s compared to [%s]%s",
+				exp, act, pt1.Uuid.String(), pt1.String(), pt2.Uuid.String(), pt2.String())
+		}
+	}
+
+	fn(p1, p2, p1.Identical(p2), false)
+	fn(p2, p1, p2.Identical(p1), false)
+	fn(p1, p1, p1.Identical(p1), true)
+	fn(p2, p2, p2.Identical(p2), true)
+
+	// make them have the same UUIDs so now should be identical
+	p1.Uuid = p2.Uuid
+	fn(p1, p2, p1.Identical(p2), true)
+	fn(p2, p1, p2.Identical(p1), true)
+	fn(p1, p1, p1.Identical(p1), true)
+	fn(p2, p2, p2.Identical(p2), true)
+
+	// now change an attribute => no longer identical
+	p1.Attrs["color"] = "mauve"
+	fn(p1, p2, p1.Identical(p2), false)
+	fn(p2, p1, p2.Identical(p1), false)
+	fn(p1, p1, p1.Identical(p1), true)
+	fn(p2, p2, p2.Identical(p2), true)
 }
