@@ -1,6 +1,7 @@
-package equinox
+package query
 
 import (
+	"equinox/internal/core"
 	"testing"
 	"time"
 )
@@ -32,7 +33,7 @@ func TestCmpTime(t *testing.T) {
 	q := NewQuery(t2, t4, NewQATrue())
 
 	fn := func(ts time.Time, exp int) {
-		act := q.CmpTime(NewPoint(ts))
+		act := q.CmpTime(core.NewPoint(ts))
 		if act != exp {
 			t.Errorf("checking %s against query %s: expected %d but got %d",
 				ts.UTC(), q.String(), exp, act)
@@ -53,14 +54,12 @@ func TestQueryAttrs(t *testing.T) {
 	ts2 := time.Date(2024, 01, 12, 13, 0, 0, 0, time.UTC)
 	ts3 := time.Date(2024, 01, 13, 13, 0, 0, 0, time.UTC)
 
-	/*
-		r["color"] = "blue"
-		r["animal"] = "moose"
-		r["shape"] = "square"
-		r["index"] = "74"
-	*/
-	p := NewPoint(ts1)
-	p.Attrs = testGetAttrs()
+	p := core.NewPoint(ts1)
+	p.Attrs = make(map[string]string)
+	p.Attrs["color"] = "blue"
+	p.Attrs["animal"] = "moose"
+	p.Attrs["shape"] = "square"
+	p.Attrs["index"] = "74"
 
 	fnsub := func(q *Query, exp_ts bool, exp_attr bool) {
 		var act bool

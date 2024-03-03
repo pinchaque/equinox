@@ -1,6 +1,7 @@
-package equinox
+package engine
 
 import (
+	"equinox/internal/core"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ func TestMemListConstructBasic(t *testing.T) {
 	ps := getPoints(0, 10)
 	var err error
 
-	runtest := func(p []*Point, len int) {
+	runtest := func(p []*core.Point, len int) {
 		ml.Add(p)
 		err = ml.validate()
 		if err != nil {
@@ -24,7 +25,7 @@ func TestMemListConstructBasic(t *testing.T) {
 	runtest(ps[0:2], 4)
 	runtest(ps[2:3], 5)
 	runtest(ps[5:7], 7)
-	runtest([]*Point{ps[9], ps[8], ps[7]}, 10)
+	runtest([]*core.Point{ps[9], ps[8], ps[7]}, 10)
 }
 
 func TestMemListConstructBatches(t *testing.T) {
@@ -32,7 +33,7 @@ func TestMemListConstructBatches(t *testing.T) {
 	ps := getPoints(0, 100)
 	batch := 10
 	var err error
-	var pbatch []*Point
+	var pbatch []*core.Point
 
 	for i := 0; i < len(ps); i++ {
 		p := ps[i]

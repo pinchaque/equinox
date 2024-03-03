@@ -1,8 +1,30 @@
-package equinox
+package query
 
 import (
+	"sort"
+	"strings"
 	"testing"
 )
+
+func testGetAttrs() map[string]string {
+	r := make(map[string]string)
+	r["color"] = "blue"
+	r["animal"] = "moose"
+	r["shape"] = "square"
+	r["index"] = "74"
+	return r
+}
+
+func testAttrsToString(attrs map[string]string) string {
+	var attr []string
+
+	for k, v := range attrs {
+		attr = append(attr, k+": "+v)
+	}
+	sort.Strings(attr) // ensure consistent output
+
+	return strings.Join(attr, ", ")
+}
 
 func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
 	result := qa.Match(attrs)

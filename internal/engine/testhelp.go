@@ -1,6 +1,8 @@
-package equinox
+package engine
 
 import (
+	"equinox/internal/core"
+	"equinox/internal/query"
 	"fmt"
 	"math"
 	"math/rand"
@@ -31,7 +33,7 @@ func testGetAttrs() map[string]string {
 	return r
 }
 
-func getPoint(i uint32) *Point {
+func getPoint(i uint32) *core.Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	dur, err := time.ParseDuration(fmt.Sprintf("%dm", i))
 	if err != nil {
@@ -45,7 +47,7 @@ func getPoint(i uint32) *Point {
 	shapes := [...]string{"circle", "square", "rhombus", "rectangle", "triangle", "pentagon"}
 	colors := [...]string{"red", "green", "blue", "yellow", "orange", "purple", "pink", "gray", "black", "white"}
 
-	p := NewPoint(ts.Add(dur))
+	p := core.NewPoint(ts.Add(dur))
 	p.Attrs["color"] = colors[r.Intn(len(colors))]
 	p.Attrs["shape"] = shapes[r.Intn(len(shapes))]
 	p.Attrs["animal"] = animals[r.Intn(len(animals))]
@@ -55,8 +57,8 @@ func getPoint(i uint32) *Point {
 }
 
 // gets n points starting at a, in random order
-func getPoints(a uint32, n int) []*Point {
-	var ps []*Point
+func getPoints(a uint32, n int) []*core.Point {
+	var ps []*core.Point
 	if n == 0 {
 		return ps
 	}
@@ -69,20 +71,20 @@ func getPoints(a uint32, n int) []*Point {
 }
 
 // gets n points starting at a, in random order
-func getPointsShuffle(a uint32, n int) []*Point {
+func getPointsShuffle(a uint32, n int) []*core.Point {
 	ps := getPoints(a, n)
 	rand.Shuffle(n, func(i, j int) { ps[i], ps[j] = ps[j], ps[i] })
 	return ps
 }
 
-func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
+func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Point) {
 	if len(exp) != len(act) {
 		t.Fatalf("unexpected # of results for query %s: expected %d got %d", q.String(), len(exp), len(act))
 	}
 
 	// sort by ascending time
-	slices.SortFunc(exp, PointCmp)
-	slices.SortFunc(act, PointCmp)
+	slices.SortFunc(exp, core.PointCmp)
+	slices.SortFunc(act, core.PointCmp)
 
 	// now compare one at a time
 	for i := 0; i < len(exp); i++ {
@@ -93,16 +95,16 @@ func cmpQResults(t *testing.T, q *Query, exp []*Point, act []*Point) {
 	}
 }
 
-func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp []*Point) {
+func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp []*core.Point) {
 
-	q := NewQuery(mints, maxts, NewQATrue())
+	q := query.NewQuery(mints, maxts, query.NewQATrue())
 	qe, err := io.Search(q)
 	if err != nil {
 		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())
 	}
 
 	// fetch results in batches
-	var results []*Point
+	var results []*core.Point
 	batchsize := 10
 	for {
 		rbatch, err := qe.Fetch(batchsize)
@@ -147,7 +149,7 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 
 	var err error
 	var mints, maxts time.Time
-	var pbatch []*Point
+	var pbatch []*core.Point
 
 	for i := 0; i < len(exp); i++ {
 		p := exp[i]

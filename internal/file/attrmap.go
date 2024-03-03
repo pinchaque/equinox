@@ -1,4 +1,4 @@
-package equinox
+package file
 
 type AttrMap struct {
 	str2int map[string]uint32
