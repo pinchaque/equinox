@@ -7,22 +7,20 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Point struct {
 	Ts    time.Time
 	Vals  map[string]float64
 	Attrs map[string]string
-	Uuid  uuid.UUID
+	Id    Id
 }
 
 func NewPoint(ts time.Time) *Point {
 	p := Point{Ts: ts}
 	p.Vals = make(map[string]float64)
 	p.Attrs = make(map[string]string)
-	p.Uuid = uuid.New()
+	p.Id = *NewId()
 	return &p
 }
 
@@ -60,7 +58,7 @@ func (p *Point) String() string {
 // Returns true if this point is identical to the other point, which means
 // the timestamps, attributes, AND GUID all match.
 func (p *Point) Identical(oth *Point) bool {
-	return p.Equal(oth) && (p.Uuid.String() == oth.Uuid.String())
+	return p.Equal(oth) && (p.Id.String() == oth.Id.String())
 }
 
 // Returns true if two Points are "equal", which means that the timestamp,

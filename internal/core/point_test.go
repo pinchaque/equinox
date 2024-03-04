@@ -30,7 +30,7 @@ func TestPointCreateEmpty(t *testing.T) {
 		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
 	}
 
-	if p.Uuid.String() == "" {
+	if p.Id.String() == "" {
 		t.Errorf("Expected a guid, got empty string")
 	}
 }
@@ -73,11 +73,20 @@ func TestPointCreateComplete(t *testing.T) {
 func TestPointEqual(t *testing.T) {
 	p1 := newPointComplete()
 
+	cmp := func(pt1 *Point, pt2 *Point, exp int) {
+		act := PointCmp(pt1, pt2)
+		if act != exp {
+			t.Errorf("PointCmp(%s, %s) expected %d got %d", pt1.String(), pt2.String(), exp, act)
+		}
+	}
+
 	{ // basic equality
 		p2 := newPointComplete()
 		if !p1.Equal(p2) {
 			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
 		}
+
+		cmp(p1, p2, 0)
 	}
 
 	{ // different timestamp
@@ -86,11 +95,16 @@ func TestPointEqual(t *testing.T) {
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
+
+		cmp(p1, p2, -1)
+		cmp(p2, p1, 1)
 	}
 
 	{ // changed value
 		p2 := newPointComplete()
+		cmp(p1, p2, 0)
 		p2.Vals["area"] = 43.1004
+		cmp(p1, p2, 0) // only timestamp matters
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -142,7 +156,9 @@ func TestPointEqual(t *testing.T) {
 
 	{ // changed attr
 		p2 := newPointComplete()
+		cmp(p1, p2, 0)
 		p2.Attrs["color"] = "blue"
+		cmp(p1, p2, 0) // only timestamp matters
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -150,7 +166,9 @@ func TestPointEqual(t *testing.T) {
 
 	{ // add attr
 		p2 := newPointComplete()
+		cmp(p1, p2, 0)
 		p2.Attrs["color2"] = "blue"
+		cmp(p1, p2, 0) // only timestamp matters
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -181,7 +199,7 @@ func TestPointIdentical(t *testing.T) {
 	fn := func(pt1 *Point, pt2 *Point, act bool, exp bool) {
 		if act != exp {
 			t.Errorf("Expected identity %t got %t: [%s]%s compared to [%s]%s",
-				exp, act, pt1.Uuid.String(), pt1.String(), pt2.Uuid.String(), pt2.String())
+				exp, act, pt1.Id.String(), pt1.String(), pt2.Id.String(), pt2.String())
 		}
 	}
 
@@ -191,7 +209,7 @@ func TestPointIdentical(t *testing.T) {
 	fn(p2, p2, p2.Identical(p2), true)
 
 	// make them have the same UUIDs so now should be identical
-	p1.Uuid = p2.Uuid
+	p1.Id = p2.Id
 	fn(p1, p2, p1.Identical(p2), true)
 	fn(p2, p1, p2.Identical(p1), true)
 	fn(p1, p1, p1.Identical(p1), true)

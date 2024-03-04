@@ -18,7 +18,7 @@ func NewMemTree() *MemTree {
 		r := core.PointCmp(a, b)
 		if r == 0 {
 			// incorporate the UUID for strict ordering
-			r = strings.Compare(a.Uuid.String(), b.Uuid.String())
+			r = strings.Compare(a.Id.String(), b.Id.String())
 		}
 
 		return r < 0
