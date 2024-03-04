@@ -16,11 +16,22 @@ type Point struct {
 	Id    Id
 }
 
+// Creates a new point at the specified time with a random ID. Initializes
+// Vals and Attrs to be empty maps.
 func NewPoint(ts time.Time) *Point {
+	p := NewPointEmptyId(ts)
+	p.Id = *NewId()
+	return p
+}
+
+// Creates a new point at the specified time with an ID of zero. This is useful
+// in cases where we need point bounds for a query that we can cmopare against
+// real points.
+func NewPointEmptyId(ts time.Time) *Point {
 	p := Point{Ts: ts}
 	p.Vals = make(map[string]float64)
 	p.Attrs = make(map[string]string)
-	p.Id = *NewId()
+	p.Id = Id{val: 0}
 	return &p
 }
 
@@ -53,6 +64,23 @@ func (p *Point) String() string {
 		p.Ts.UTC(),
 		strings.Join(val, ", "),
 		strings.Join(attr, ", "))
+}
+
+// Returns a clone of this point with all data members copied. Modifying the
+// clone won't modify the original.
+func (p *Point) Clone() *Point {
+	r := NewPoint(p.Ts)
+	r.Id = p.Id
+
+	for k, v := range p.Vals {
+		r.Vals[k] = v
+	}
+
+	for k, v := range p.Attrs {
+		r.Attrs[k] = v
+	}
+
+	return r
 }
 
 // Returns true if this point is identical to the other point, which means

@@ -70,7 +70,7 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 	// func that gets called on each iteration
 	iter := func(p *core.Point) bool {
 		// update starting point to current point
-		mtc.st = core.NewPoint(p.Ts)
+		mtc.st = p.Clone()
 
 		// if we're already full then we need to stop now and we'll try this
 		// point again on the next call to fetch
@@ -99,11 +99,11 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 
 func (mt *MemTree) Search(q *query.Query) (*query.QueryExec, error) {
 	// starting point is what was specified in the query
-	st := core.NewPoint(q.Start)
+	st := core.NewPointEmptyId(q.Start)
 
 	// ending point needs to be one microsecond past the query since
 	// AscendRange uses < not <=
-	end := core.NewPoint(time.UnixMicro(q.End.UnixMicro() + 1))
+	end := core.NewPointEmptyId(time.UnixMicro(q.End.UnixMicro() + 1))
 
 	mlc := &MemTreeCursor{mt: mt, q: q, st: st, end: end}
 	return query.NewQueryExec(q, mlc), nil
