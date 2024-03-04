@@ -73,7 +73,7 @@ func (ml *MemList) Add(ps []*core.Point) error {
 			// the one we just inserted
 		} else {
 			// point p needs to come before the current e, so we move it backwards
-			// and run the loop again with teh same i
+			// and run the loop again with the same i
 			e = e.Prev()
 		}
 	}

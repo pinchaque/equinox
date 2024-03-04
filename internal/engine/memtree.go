@@ -13,7 +13,15 @@ type MemTree struct {
 }
 
 func NewMemTree() *MemTree {
-	fn := func(a, b *core.Point) bool { return a.Less(b) }
+	fn := func(a, b *core.Point) bool {
+		r := core.PointCmp(a, b)
+		if r == 0 {
+			// incorporate the ID for strict ordering
+			r = a.Id.Cmp(b.Id)
+		}
+
+		return r < 0
+	}
 	mt := MemTree{}
 	mt.buf = btree.NewG(2, fn)
 	return &mt
@@ -51,7 +59,7 @@ type MemTreeCursor struct {
 }
 
 func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
-	if mtc.st == nil || mtc.end == nil || mtc.end.Less(mtc.st) {
+	if mtc.st == nil || mtc.end == nil || core.PointCmp(mtc.end, mtc.st) < 0 {
 		// nothing to do if empty time range
 		return nil, nil
 	}
@@ -62,7 +70,7 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 	// func that gets called on each iteration
 	iter := func(p *core.Point) bool {
 		// update starting point to current point
-		mtc.st = core.NewPoint(p.Ts)
+		mtc.st = p.Clone()
 
 		// if we're already full then we need to stop now and we'll try this
 		// point again on the next call to fetch
@@ -75,13 +83,12 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 			// don't add it if it matches the previous returned point
 			// this fixes an edge case where AscendRange stops naturally on
 			// an added point
-			if mtc.last == nil || !mtc.last.Equal(p) {
+			if mtc.last == nil || !mtc.last.Identical(p) {
 				r = append(r, p)
 				mtc.last = p // remember last point added
 			}
 		}
 
-		// TODO: we need strict ordering and avoid duplicates. GUID would help!
 		return true
 	}
 
@@ -91,11 +98,11 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 
 func (mt *MemTree) Search(q *query.Query) (*query.QueryExec, error) {
 	// starting point is what was specified in the query
-	st := core.NewPoint(q.Start)
+	st := core.NewPointEmptyId(q.Start)
 
 	// ending point needs to be one microsecond past the query since
 	// AscendRange uses < not <=
-	end := core.NewPoint(time.UnixMicro(q.End.UnixMicro() + 1))
+	end := core.NewPointEmptyId(time.UnixMicro(q.End.UnixMicro() + 1))
 
 	mlc := &MemTreeCursor{mt: mt, q: q, st: st, end: end}
 	return query.NewQueryExec(q, mlc), nil
