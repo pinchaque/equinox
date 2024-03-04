@@ -242,7 +242,7 @@ func TestPointIdentical(t *testing.T) {
 	fn(p1, p1, true)
 	fn(p2, p2, true)
 
-	// make them have the same UUIDs so now should be identical
+	// make them have the same IDs so now should be identical
 	p1.Id = p2.Id
 	fn(p1, p2, true)
 	fn(p2, p1, true)

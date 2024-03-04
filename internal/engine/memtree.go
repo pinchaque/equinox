@@ -83,13 +83,12 @@ func (mtc *MemTreeCursor) Fetch(n int) ([]*core.Point, error) {
 			// don't add it if it matches the previous returned point
 			// this fixes an edge case where AscendRange stops naturally on
 			// an added point
-			if mtc.last == nil || !mtc.last.Equal(p) {
+			if mtc.last == nil || !mtc.last.Identical(p) {
 				r = append(r, p)
 				mtc.last = p // remember last point added
 			}
 		}
 
-		// TODO: we need strict ordering and avoid duplicates. GUID would help!
 		return true
 	}
 
