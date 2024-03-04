@@ -60,7 +60,7 @@ func (id *Id) String() string {
 // is greater than other, 0 if equal. This can be used to check for uniqueness
 // and duplicate IDs. The current implementation just compares the underlying
 // uint64 values.
-func (id *Id) Cmp(oth *Id) int {
+func (id *Id) Cmp(oth Id) int {
 	if id.val < oth.val {
 		return -1
 	} else if id.val > oth.val {

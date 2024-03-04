@@ -3,7 +3,6 @@ package engine
 import (
 	"equinox/internal/core"
 	"equinox/internal/query"
-	"strings"
 	"time"
 
 	"github.com/google/btree"
@@ -17,8 +16,8 @@ func NewMemTree() *MemTree {
 	fn := func(a, b *core.Point) bool {
 		r := core.PointCmp(a, b)
 		if r == 0 {
-			// incorporate the UUID for strict ordering
-			r = strings.Compare(a.Id.String(), b.Id.String())
+			// incorporate the ID for strict ordering
+			r = a.Id.Cmp(b.Id)
 		}
 
 		return r < 0

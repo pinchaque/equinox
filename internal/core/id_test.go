@@ -85,10 +85,10 @@ func TestIdErrors(t *testing.T) {
 }
 
 func TestIdCmp(t *testing.T) {
-	id1 := &Id{val: 12345678}
-	id2 := &Id{val: 45678912}
+	id1 := Id{val: 12345678}
+	id2 := Id{val: 45678912}
 
-	fn := func(i1 *Id, i2 *Id, exp int) {
+	fn := func(i1 Id, i2 Id, exp int) {
 		act := i1.Cmp(i2)
 		if act != exp {
 			t.Errorf("error comparing [%d]%s to [%d]%s: expected %d got %d",
