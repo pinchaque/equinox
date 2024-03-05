@@ -125,6 +125,11 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Length: got %d, wanted %d", m.Length(), 1)
 	}
 
+	m.DeleteAttr(s2) // should be a no-op
+	if m.Length() != 1 {
+		t.Errorf("Length: got %d, wanted %d", m.Length(), 1)
+	}
+
 	_, exist = m.AtIndex(i2)
 	if exist {
 		t.Errorf("AtIndex: index %d for attr %s still exists", i2, s2)

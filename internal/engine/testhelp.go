@@ -7,38 +7,20 @@ import (
 	"math"
 	"math/rand"
 	"slices"
-	"sort"
-	"strings"
 	"testing"
 	"time"
 )
 
-func testAttrsToString(attrs map[string]string) string {
-	var attr []string
-
-	for k, v := range attrs {
-		attr = append(attr, k+": "+v)
-	}
-	sort.Strings(attr) // ensure consistent output
-
-	return strings.Join(attr, ", ")
-}
-
-func testGetAttrs() map[string]string {
-	r := make(map[string]string)
-	r["color"] = "blue"
-	r["animal"] = "moose"
-	r["shape"] = "square"
-	r["index"] = "74"
-	return r
-}
-
-func getPoint(i uint32) *core.Point {
-	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
+func getDurMins(i int) time.Duration {
 	dur, err := time.ParseDuration(fmt.Sprintf("%dm", i))
 	if err != nil {
 		panic(err)
 	}
+	return dur
+}
+
+func getPoint(i uint32) *core.Point {
+	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 
 	s := rand.NewSource(ts.Unix()) // always use the same seed
 	r := rand.New(s)               // initialize local pseudorandom generator
@@ -47,7 +29,7 @@ func getPoint(i uint32) *core.Point {
 	shapes := [...]string{"circle", "square", "rhombus", "rectangle", "triangle", "pentagon"}
 	colors := [...]string{"red", "green", "blue", "yellow", "orange", "purple", "pink", "gray", "black", "white"}
 
-	p := core.NewPoint(ts.Add(dur))
+	p := core.NewPoint(ts.Add(getDurMins(int(i))))
 	p.Attrs["color"] = colors[r.Intn(len(colors))]
 	p.Attrs["shape"] = shapes[r.Intn(len(shapes))]
 	p.Attrs["animal"] = animals[r.Intn(len(animals))]
@@ -59,9 +41,6 @@ func getPoint(i uint32) *core.Point {
 // gets n points starting at a, in random order
 func getPoints(a uint32, n int) []*core.Point {
 	var ps []*core.Point
-	if n == 0 {
-		return ps
-	}
 
 	for i := 0; i < n; i++ {
 		ps = append(ps, getPoint(uint32(i)+a))
@@ -89,7 +68,7 @@ func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Po
 	// now compare one at a time
 	for i := 0; i < len(exp); i++ {
 		if !exp[i].Equal(act[i]) {
-			t.Errorf("unexpected point returned; got %s expected %s", act[i].String(), exp[i].String())
+			t.Errorf("unexpected point returned; got \n%s expected \n%s", act[i].String(), exp[i].String())
 		}
 
 	}
@@ -193,4 +172,8 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 
 	// basic query should return all
 	testQuery(t, io, mints, maxts, exp)
+	noresults := make([]*core.Point, 0)
+	testQuery(t, io, mints.Add(getDurMins(-60)), mints.Add(getDurMins(-1)), noresults)
+	testQuery(t, io, maxts.Add(getDurMins(1)), maxts.Add(getDurMins(60)), noresults)
+
 }

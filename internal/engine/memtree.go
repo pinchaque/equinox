@@ -3,6 +3,8 @@ package engine
 import (
 	"equinox/internal/core"
 	"equinox/internal/query"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/btree"
@@ -32,7 +34,18 @@ func (mt *MemTree) Name() string {
 }
 
 func (mt *MemTree) String() string {
-	return "MemTree"
+	var pstr []string
+
+	i := 0
+	iter := func(p *core.Point) bool {
+		pstr = append(pstr, fmt.Sprintf("%d: %s", i, p.String()))
+		i++
+		return true
+	}
+
+	mt.buf.Ascend(iter)
+
+	return fmt.Sprintf("%s: {\n%s\n}", mt.Name(), strings.Join(pstr, "\n"))
 }
 
 func (mt *MemTree) Add(ps []*core.Point) error {
