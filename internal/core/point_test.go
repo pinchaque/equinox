@@ -169,6 +169,13 @@ func TestPointEqual(t *testing.T) {
 		if p1.EqualTol(p2, 0.0000001) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
 		}
+
+		// test 0.00 value
+		p2.Vals["area"] = 0.000
+		if !p2.EqualTol(p2, 0.001) {
+			t.Errorf("Expected equal, got inequal: %s compared to %s", p2.String(), p2.String())
+		}
+
 	}
 
 	{ // add value

@@ -130,6 +130,7 @@ func (mlc *MemListCursor) Fetch(n int) ([]*core.Point, error) {
 		// results if the current list elem is after the query end time
 		if p.Ts.UnixMicro() > mlc.q.End.UnixMicro() {
 			mlc.e = nil // nothing more to look at
+			break
 		}
 	}
 

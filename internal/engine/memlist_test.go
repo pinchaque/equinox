@@ -10,6 +10,10 @@ func TestMemListConstructBasic(t *testing.T) {
 	ps := getPoints(0, 10)
 	var err error
 
+	if ml.Len() != 0 {
+		t.Fatalf("incorrect length expected 0 got %d", ml.Len())
+	}
+
 	runtest := func(p []*core.Point, len int) {
 		ml.Add(p)
 		err = ml.validate()
@@ -21,11 +25,33 @@ func TestMemListConstructBasic(t *testing.T) {
 		}
 	}
 
+	runtest(make([]*core.Point, 0), 0)
 	runtest(ps[3:5], 2)
 	runtest(ps[0:2], 4)
 	runtest(ps[2:3], 5)
 	runtest(ps[5:7], 7)
+	// TODO: fix MemList so that it doesn't allow duplicate points
+	// runtest(ps[5:7], 7) // we should not be allowed to add duplicates
 	runtest([]*core.Point{ps[9], ps[8], ps[7]}, 10)
+}
+
+func TestMemListString(t *testing.T) {
+	ml := NewMemList()
+
+	exp := "MemList"
+	if ml.Name() != exp {
+		t.Errorf("incorrect Name: expected %s got %s", exp, ml.Name())
+	}
+
+	ml.Add(getPoints(5, 2))
+	exp = `MemList: {
+0: [2024-01-10 23:06:02 +0000 UTC] val[area: -0.958924, temp: 0.283662] attr[animal: pig, color: purple, shape: circle]
+1: [2024-01-10 23:07:02 +0000 UTC] val[area: -0.279415, temp: 0.960170] attr[animal: pig, color: purple, shape: circle]
+}`
+	act := ml.String()
+	if exp != act {
+		t.Errorf("incorect MemList string: expected '%s' got '%s'", exp, act)
+	}
 }
 
 func TestMemListConstructBatches(t *testing.T) {
