@@ -1,18 +1,10 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"equinox/internal/routers"
 )
 
-func ping(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, "")
-}
-
 func main() {
-	router := gin.Default()
-	router.GET("/ping", ping)
-
-	router.Run("localhost:8080")
+	r := routers.SetupRouter()
+	r.Run("localhost:8080")
 }
