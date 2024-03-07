@@ -2,9 +2,15 @@ package main
 
 import (
 	"equinox/internal/routers"
+	"fmt"
 )
 
-func main() {
+func LaunchRouter(host string, port int) {
 	r := routers.SetupRouter()
-	r.Run("localhost:8080")
+	addr := fmt.Sprintf("%s:%d", host, port)
+	r.Run(addr)
+}
+
+func main() {
+	LaunchRouter("localhost", 8080)
 }

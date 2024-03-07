@@ -7,5 +7,7 @@ import (
 )
 
 func Ping(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, "")
+	resp := make(map[string]string, 1)
+	resp["message"] = "Hello World"
+	c.JSON(http.StatusOK, resp)
 }
