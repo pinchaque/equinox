@@ -16,16 +16,11 @@ func SetupRouter() *gin.Engine {
 	}
 
 	// Protected routes
-	/* future expansion
 	protected := router.Group("/api")
-	protected.Use(middleware.AuthMiddleware())
+	// protected.Use(middleware.AuthMiddleware()) TODO add auth
 	{
-	  protected.GET("/users", controllers.GetUsers)
-	  protected.POST("/users", controllers.CreateUser)
-	  protected.GET("/users/:id", controllers.GetUserByID)
-	  protected.PUT("/users/:id", controllers.UpdateUser)
-	  protected.DELETE("/users/:id", controllers.DeleteUser)
+		protected.POST("/points", ctl.PointAdd)
 	}
-	*/
+
 	return router
 }
