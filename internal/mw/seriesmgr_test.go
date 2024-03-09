@@ -46,4 +46,10 @@ func TestSeriesMgrAdding(t *testing.T) {
 	r, err = mgr.Get(s.Id)
 	assert.NoError(t, err)
 	assert.Equal(t, s.Id, r.Id)
+
+	// trying adding again - should fail
+	err = mgr.Add(s)
+	assert.Error(t, err)
+	assert.Equal(t, `series 'foobar' already exists`, err.Error())
+	assert.Equal(t, 1, mgr.Size())
 }
