@@ -1,8 +1,11 @@
 package core
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPointCreate(t *testing.T) {
@@ -68,7 +71,7 @@ func TestPointCreateEmptyId(t *testing.T) {
 	}
 }
 
-func newPointComplete() *Point {
+func testNewPointComplete() *Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPoint(ts)
 	p.Attrs["shape"] = "square"
@@ -79,15 +82,30 @@ func newPointComplete() *Point {
 }
 
 func TestPointString(t *testing.T) {
-	p := newPointComplete()
+	p := testNewPointComplete()
 	exp := "[2024-01-10 23:01:02 +0000 UTC] val[area: 43.100000, temp: 21.100000] attr[color: red, shape: square]"
-	if p.String() != exp {
-		t.Errorf("Expected %s, got %s", exp, p.String())
-	}
+	assert.Equal(t, exp, p.String())
+
+}
+
+func TestPointJSON(t *testing.T) {
+	p := testNewPointComplete()
+	p.Ts = time.Date(2024, 01, 10, 23, 1, 2, 123456789, time.UTC) // add microsecs
+	p.Id.val = 485782                                             // need consistent ID
+	b, err := json.Marshal(p)
+	assert.NoError(t, err)
+	exp := `{"Ts":"2024-01-10T23:01:02.123456789Z","Vals":{"area":43.1,"temp":21.1},"Attrs":{"color":"red","shape":"square"},"Id":"AAAAAAAHaZY="}`
+	assert.Equal(t, exp, string(b))
+
+	// now try unmarshaling
+	p2 := &Point{} // empty point
+	err = json.Unmarshal(b, p2)
+	assert.NoError(t, err)
+	assert.Equal(t, true, p.Equal(p2), "Orig Point:\n%s\nUnmarshaled:\n%s\n", p.String(), p2.String())
 }
 
 func TestPointCreateComplete(t *testing.T) {
-	p := newPointComplete()
+	p := testNewPointComplete()
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 
 	if ts != p.Ts {
@@ -104,7 +122,7 @@ func TestPointCreateComplete(t *testing.T) {
 }
 
 func TestPointEqual(t *testing.T) {
-	p1 := newPointComplete()
+	p1 := testNewPointComplete()
 
 	cmp := func(pt1 *Point, pt2 *Point, exp int) {
 		act := PointCmp(pt1, pt2)
@@ -114,7 +132,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // basic equality
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		if !p1.Equal(p2) {
 			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -123,7 +141,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // different timestamp
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		p2.Ts = p2.Ts.AddDate(0, 0, 1)
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -134,7 +152,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // changed value
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		cmp(p1, p2, 0)
 		p2.Vals["area"] = 43.1004
 		cmp(p1, p2, 0) // only timestamp matters
@@ -179,7 +197,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // add value
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		p2.Vals["area2"] = 49.999
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -187,7 +205,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // delete value
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		delete(p2.Vals, "area")
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -195,7 +213,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // changed attr
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		cmp(p1, p2, 0)
 		p2.Attrs["color"] = "blue"
 		cmp(p1, p2, 0) // only timestamp matters
@@ -205,7 +223,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // add attr
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		cmp(p1, p2, 0)
 		p2.Attrs["color2"] = "blue"
 		cmp(p1, p2, 0) // only timestamp matters
@@ -215,7 +233,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // delete attr
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		delete(p2.Attrs, "color")
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -233,8 +251,8 @@ func TestPointIdentical(t *testing.T) {
 		p.Vals["temp"] = 21.1
 	*/
 
-	p1 := newPointComplete()
-	p2 := newPointComplete()
+	p1 := testNewPointComplete()
+	p2 := testNewPointComplete()
 
 	fn := func(pt1 *Point, pt2 *Point, exp bool) {
 		act := pt1.Identical(pt2)
@@ -274,7 +292,7 @@ func TestPointClone(t *testing.T) {
 		p.Vals["temp"] = 21.1
 	*/
 
-	p1 := newPointComplete()
+	p1 := testNewPointComplete()
 	p2 := p1.Clone()
 
 	// these should be identical and equal
