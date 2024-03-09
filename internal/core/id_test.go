@@ -2,15 +2,29 @@ package core
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIdString(t *testing.T) {
 	id := Id{val: 2822340188419286878}
 	exp := "Jyr3cq4KZ14="
+	assert.Equal(t, exp, id.String())
 
-	if id.String() != exp {
-		t.Errorf("error in id string: expeced %s got %s", exp, id.String())
-	}
+}
+func TestIdMarshal(t *testing.T) {
+	id := Id{val: 2822340188419286878}
+	exp := "Jyr3cq4KZ14="
+	act, err := id.MarshalText()
+	assert.NoError(t, err)
+	assert.Equal(t, exp, string(act))
+
+	// test unmarshaling
+	id2 := Id{val: 0}
+	err = id2.UnmarshalText(act)
+	assert.NoError(t, err)
+	assert.Equal(t, id.val, id2.val)
+	assert.Equal(t, id.String(), id2.String())
 }
 
 func TestIdRoundtrip(t *testing.T) {

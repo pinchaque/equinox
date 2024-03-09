@@ -56,6 +56,21 @@ func (id *Id) String() string {
 	return base64.URLEncoding.EncodeToString(buf.Bytes())
 }
 
+// Implements TextMarshaler interface
+func (id *Id) MarshalText() (text []byte, err error) {
+	return []byte(id.String()), nil
+}
+
+// Implements TextUnmarshaler interface
+func (id *Id) UnmarshalText(text []byte) error {
+	n, err := IdFromString(string(text))
+	if err != nil {
+		return err
+	}
+	id.val = n.val // set this objects val to be the one we just unmarshaled
+	return nil
+}
+
 // Compares two Id structs, return -1 if this one is less than other, 1 if this
 // is greater than other, 0 if equal. This can be used to check for uniqueness
 // and duplicate IDs. The current implementation just compares the underlying
