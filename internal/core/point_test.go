@@ -66,8 +66,8 @@ func TestPointCreateEmptyId(t *testing.T) {
 		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
 	}
 
-	if p.Id.val != 0 {
-		t.Errorf("Expected an id of 0, got %d", p.Id.val)
+	if p.Id != nil {
+		t.Errorf("Expected an id of nil, got %d", p.Id.val)
 	}
 }
 
@@ -101,6 +101,22 @@ func TestPointJSON(t *testing.T) {
 	p2 := &Point{} // empty point
 	err = json.Unmarshal(b, p2)
 	assert.NoError(t, err)
+	assert.Equal(t, true, p.Equal(p2), "Orig Point:\n%s\nUnmarshaled:\n%s\n", p.String(), p2.String())
+}
+func TestPointJSONEmptyId(t *testing.T) {
+	p := testNewPointComplete()
+	p.Ts = time.Date(2024, 01, 10, 23, 1, 2, 123456789, time.UTC) // add microsecs
+	p.Id = nil
+	b, err := json.Marshal(p)
+	assert.NoError(t, err)
+	exp := `{"Ts":"2024-01-10T23:01:02.123456789Z","Vals":{"area":43.1,"temp":21.1},"Attrs":{"color":"red","shape":"square"},"Id":null}`
+	assert.Equal(t, exp, string(b))
+
+	// now try unmarshaling
+	p2 := &Point{} // empty point
+	err = json.Unmarshal(b, p2)
+	assert.NoError(t, err)
+	assert.Nil(t, p2.Id)
 	assert.Equal(t, true, p.Equal(p2), "Orig Point:\n%s\nUnmarshaled:\n%s\n", p.String(), p2.String())
 }
 
