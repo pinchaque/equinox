@@ -1,29 +1,49 @@
 package mw
 
-// Helper functions that make it easy to return responses compliant with JSend
-// as described here: https://github.com/omniti-labs/jsend
+import "encoding/json"
+
+// Implementation of the JSend response format as described here:
+// https://github.com/omniti-labs/jsend
+type JSend struct {
+	Status  string          `json:"status,omitempty"`
+	Data    json.RawMessage `json:"data,omitempty"`
+	Message string          `json:"message,omitempty"`
+	Code    string          `json:"code,omitempty"`
+}
+
+func NewJSend() *JSend {
+	return &JSend{}
+}
 
 // All went well, and (usually) some data was returned.
-func Success(data any) map[string]any {
-	h := make(map[string]any, 2)
-	h["status"] = "success"
-	h["data"] = data
-	return h
+func Success(data any) *JSend {
+	var err error
+	js := NewJSend()
+	js.Status = "success"
+	js.Data, err = json.Marshal(data)
+	if err != nil {
+		panic("failed to marshal data to JSON")
+	}
+	return js
 }
 
 // There was a problem with the data submitted, or some pre-condition of the
 // API call wasn't satisfied
-func Fail(data any) map[string]any {
-	h := make(map[string]any, 2)
-	h["status"] = "fail"
-	h["data"] = data
-	return h
+func Fail(data any) *JSend {
+	var err error
+	js := NewJSend()
+	js.Status = "fail"
+	js.Data, err = json.Marshal(data)
+	if err != nil {
+		panic("failed to marshal data to JSON")
+	}
+	return js
 }
 
 // An error occurred in processing the request, i.e. an exception was thrown
-func Error(msg string) map[string]any {
-	h := make(map[string]any, 2)
-	h["status"] = "error"
-	h["message"] = msg
-	return h
+func Error(msg string) *JSend {
+	js := NewJSend()
+	js.Status = "error"
+	js.Message = msg
+	return js
 }
