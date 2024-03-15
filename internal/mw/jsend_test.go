@@ -42,6 +42,10 @@ func TestJSendSuccess(t *testing.T) {
 	assert.Equal(t, r.Data, j.Data)
 	assert.Equal(t, r.Message, j.Message)
 	assert.Equal(t, r.Code, j.Code)
+
+	assert.True(t, j.IsSuccess())
+	assert.False(t, j.IsFail())
+	assert.False(t, j.IsError())
 }
 
 func TestJSendFail(t *testing.T) {
@@ -57,6 +61,10 @@ func TestJSendFail(t *testing.T) {
 	assert.Equal(t, r.Data, j.Data)
 	assert.Equal(t, r.Message, j.Message)
 	assert.Equal(t, r.Code, j.Code)
+
+	assert.False(t, j.IsSuccess())
+	assert.True(t, j.IsFail())
+	assert.False(t, j.IsError())
 }
 func TestJSendSuccess2(t *testing.T) {
 	// first we marshal the whole object to JSON
@@ -89,4 +97,8 @@ func TestJSendError(t *testing.T) {
 	assert.Equal(t, r.Data, j.Data)
 	assert.Equal(t, r.Message, j.Message)
 	assert.Equal(t, r.Code, j.Code)
+
+	assert.False(t, j.IsSuccess())
+	assert.False(t, j.IsFail())
+	assert.True(t, j.IsError())
 }

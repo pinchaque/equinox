@@ -47,3 +47,22 @@ func Error(msg string) *JSend {
 	js.Message = msg
 	return js
 }
+
+// Returns true if this JSend object represents a successful response.
+func (js *JSend) IsSuccess() bool {
+	return js.Status == "success"
+}
+
+// Returns true if this JSend object represents a failed response. This would
+// mean there was a problem with the data submitted, or some pre-condition of
+// the API call wasn't satisfied.
+func (js *JSend) IsFail() bool {
+	return js.Status == "fail"
+}
+
+// Returns true if this JSend object represents an error response. This would
+// mean an error occurred in processing the request, i.e. an exception was
+// thrown. If this is true then the caller can check Message to see details.
+func (js *JSend) IsError() bool {
+	return js.Status == "error"
+}
