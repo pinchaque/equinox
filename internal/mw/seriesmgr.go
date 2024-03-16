@@ -57,3 +57,9 @@ func (sm *seriesMgr) Add(s *models.Series) error {
 
 	return nil
 }
+
+// Removes the given series from the manager if it exists. If it does not exist
+// then nothing is done.
+func (sm *seriesMgr) Remove(id string) {
+	delete(seriesMgrInst.series, id)
+}

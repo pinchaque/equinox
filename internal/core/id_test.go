@@ -11,6 +11,12 @@ func TestIdString(t *testing.T) {
 	exp := "Jyr3cq4KZ14="
 	assert.Equal(t, exp, id.String())
 }
+func TestIdClone(t *testing.T) {
+	id := Id{val: 2822340188419286878}
+	id2 := id.Clone()
+	assert.Equal(t, id.val, id2.val)
+	assert.Equal(t, id.String(), id2.String())
+}
 
 func TestIdMarshal(t *testing.T) {
 	id := Id{val: 2822340188419286878}

@@ -52,4 +52,10 @@ func TestSeriesMgrAdding(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, `series 'foobar' already exists`, err.Error())
 	assert.Equal(t, 1, mgr.Size())
+
+	// remove it
+	mgr.Remove(s.Id)
+	assert.Equal(t, 0, mgr.Size())
+	mgr.Remove(s.Id)
+	assert.Equal(t, 0, mgr.Size()) // no op
 }

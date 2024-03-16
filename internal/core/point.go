@@ -85,7 +85,7 @@ func (p *Point) String() string {
 // clone won't modify the original.
 func (p *Point) Clone() *Point {
 	r := NewPoint(p.Ts)
-	r.Id = p.Id
+	r.Id = p.Id.Clone()
 
 	for k, v := range p.Vals {
 		r.Vals[k] = v

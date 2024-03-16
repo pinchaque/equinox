@@ -56,6 +56,12 @@ func (id *Id) String() string {
 	return base64.URLEncoding.EncodeToString(buf.Bytes())
 }
 
+// Clones this Id
+func (id *Id) Clone() *Id {
+	i := Id{val: id.val}
+	return &i
+}
+
 // Implements TextMarshaler interface
 func (id *Id) MarshalText() (text []byte, err error) {
 	return []byte(id.String()), nil
