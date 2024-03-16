@@ -13,14 +13,14 @@ type Point struct {
 	Ts    time.Time
 	Vals  map[string]float64
 	Attrs map[string]string
-	Id    Id
+	Id    *Id
 }
 
 // Creates a new point at the specified time with a random ID. Initializes
 // Vals and Attrs to be empty maps.
 func NewPoint(ts time.Time) *Point {
 	p := NewPointEmptyId(ts)
-	p.Id = *NewId()
+	p.GenerateId()
 	return p
 }
 
@@ -31,7 +31,17 @@ func NewPointEmptyId(ts time.Time) *Point {
 	p := Point{Ts: ts}
 	p.Vals = make(map[string]float64)
 	p.Attrs = make(map[string]string)
-	p.Id = Id{val: 0}
+	p.Id = nil
+	return &p
+}
+
+// Creates a new completely empty point. This is useful for when we need a blank
+// point object for unmarshaling.
+func NewPointEmpty() *Point {
+	p := Point{}
+	p.Vals = make(map[string]float64)
+	p.Attrs = make(map[string]string)
+	p.Id = nil
 	return &p
 }
 
@@ -45,6 +55,11 @@ func PointCmp(a, b *Point) int {
 	} else {
 		return 0
 	}
+}
+
+// Generates a new Id for this Point.
+func (p *Point) GenerateId() {
+	p.Id = NewId()
 }
 
 func (p *Point) String() string {
@@ -70,7 +85,7 @@ func (p *Point) String() string {
 // clone won't modify the original.
 func (p *Point) Clone() *Point {
 	r := NewPoint(p.Ts)
-	r.Id = p.Id
+	r.Id = p.Id.Clone()
 
 	for k, v := range p.Vals {
 		r.Vals[k] = v
@@ -86,7 +101,10 @@ func (p *Point) Clone() *Point {
 // Returns true if this point is identical to the other point, which means
 // the timestamps, attributes, AND ID all match.
 func (p *Point) Identical(oth *Point) bool {
-	return p.Equal(oth) && (p.Id.String() == oth.Id.String())
+	return p.Equal(oth) &&
+		p.Id != nil &&
+		oth.Id != nil &&
+		p.Id.String() == oth.Id.String()
 }
 
 // Returns true if two Points are "equal", which means that the timestamp,

@@ -1,8 +1,11 @@
 package core
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPointCreate(t *testing.T) {
@@ -37,6 +40,11 @@ func TestPointCreate(t *testing.T) {
 	if p.Id.String() == "" {
 		t.Errorf("Expected an id, got empty string")
 	}
+
+	// generate new Id and make sure it is different
+	oldId := p.Id.String()
+	p.GenerateId()
+	assert.NotEqual(t, oldId, p.Id.String())
 }
 func TestPointCreateEmptyId(t *testing.T) {
 
@@ -63,12 +71,42 @@ func TestPointCreateEmptyId(t *testing.T) {
 		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
 	}
 
-	if p.Id.val != 0 {
-		t.Errorf("Expected an id of 0, got %d", p.Id.val)
+	if p.Id != nil {
+		t.Errorf("Expected an id of nil, got %d", p.Id.val)
 	}
 }
 
-func newPointComplete() *Point {
+func TestPointCreateEmpty(t *testing.T) {
+
+	ts := time.Time{}
+	p := NewPointEmpty()
+
+	if ts != p.Ts { // empty
+		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
+	}
+
+	if p.Vals == nil {
+		t.Errorf("Values is nil")
+	}
+
+	if len(p.Vals) != 0 {
+		t.Errorf("Expected 0 values, got %d", len(p.Vals))
+	}
+
+	if p.Attrs == nil {
+		t.Errorf("Attrs is nil")
+	}
+
+	if len(p.Attrs) != 0 {
+		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
+	}
+
+	if p.Id != nil {
+		t.Errorf("Expected an id of nil, got %d", p.Id.val)
+	}
+}
+
+func testNewPointComplete() *Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPoint(ts)
 	p.Attrs["shape"] = "square"
@@ -79,15 +117,44 @@ func newPointComplete() *Point {
 }
 
 func TestPointString(t *testing.T) {
-	p := newPointComplete()
+	p := testNewPointComplete()
 	exp := "[2024-01-10 23:01:02 +0000 UTC] val[area: 43.100000, temp: 21.100000] attr[color: red, shape: square]"
-	if p.String() != exp {
-		t.Errorf("Expected %s, got %s", exp, p.String())
-	}
+	assert.Equal(t, exp, p.String())
+
+}
+
+func TestPointJSON(t *testing.T) {
+	p := testNewPointComplete()
+	p.Ts = time.Date(2024, 01, 10, 23, 1, 2, 123456789, time.UTC) // add microsecs
+	p.Id.val = 485782                                             // need consistent ID
+	b, err := json.Marshal(p)
+	assert.NoError(t, err)
+	exp := `{"Ts":"2024-01-10T23:01:02.123456789Z","Vals":{"area":43.1,"temp":21.1},"Attrs":{"color":"red","shape":"square"},"Id":"AAAAAAAHaZY="}`
+	assert.Equal(t, exp, string(b))
+
+	// now try unmarshaling
+	p2 := &Point{} // empty point
+	err = json.Unmarshal(b, p2)
+	assert.NoError(t, err)
+	assert.Equal(t, true, p.Equal(p2), "Orig Point:\n%s\nUnmarshaled:\n%s\n", p.String(), p2.String())
+}
+func TestPointJSONEmpty(t *testing.T) {
+	p := NewPointEmpty()
+	b, err := json.Marshal(p)
+	assert.NoError(t, err)
+	exp := `{"Ts":"0001-01-01T00:00:00Z","Vals":{},"Attrs":{},"Id":null}`
+	assert.Equal(t, exp, string(b))
+
+	// now try unmarshaling
+	p2 := &Point{} // empty point
+	err = json.Unmarshal(b, p2)
+	assert.NoError(t, err)
+	assert.Nil(t, p2.Id)
+	assert.Equal(t, true, p.Equal(p2), "Orig Point:\n%s\nUnmarshaled:\n%s\n", p.String(), p2.String())
 }
 
 func TestPointCreateComplete(t *testing.T) {
-	p := newPointComplete()
+	p := testNewPointComplete()
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 
 	if ts != p.Ts {
@@ -104,7 +171,7 @@ func TestPointCreateComplete(t *testing.T) {
 }
 
 func TestPointEqual(t *testing.T) {
-	p1 := newPointComplete()
+	p1 := testNewPointComplete()
 
 	cmp := func(pt1 *Point, pt2 *Point, exp int) {
 		act := PointCmp(pt1, pt2)
@@ -114,7 +181,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // basic equality
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		if !p1.Equal(p2) {
 			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
 		}
@@ -123,7 +190,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // different timestamp
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		p2.Ts = p2.Ts.AddDate(0, 0, 1)
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -134,7 +201,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // changed value
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		cmp(p1, p2, 0)
 		p2.Vals["area"] = 43.1004
 		cmp(p1, p2, 0) // only timestamp matters
@@ -179,7 +246,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // add value
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		p2.Vals["area2"] = 49.999
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -187,7 +254,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // delete value
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		delete(p2.Vals, "area")
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -195,7 +262,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // changed attr
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		cmp(p1, p2, 0)
 		p2.Attrs["color"] = "blue"
 		cmp(p1, p2, 0) // only timestamp matters
@@ -205,7 +272,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // add attr
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		cmp(p1, p2, 0)
 		p2.Attrs["color2"] = "blue"
 		cmp(p1, p2, 0) // only timestamp matters
@@ -215,7 +282,7 @@ func TestPointEqual(t *testing.T) {
 	}
 
 	{ // delete attr
-		p2 := newPointComplete()
+		p2 := testNewPointComplete()
 		delete(p2.Attrs, "color")
 		if p1.Equal(p2) {
 			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
@@ -233,8 +300,8 @@ func TestPointIdentical(t *testing.T) {
 		p.Vals["temp"] = 21.1
 	*/
 
-	p1 := newPointComplete()
-	p2 := newPointComplete()
+	p1 := testNewPointComplete()
+	p2 := testNewPointComplete()
 
 	fn := func(pt1 *Point, pt2 *Point, exp bool) {
 		act := pt1.Identical(pt2)
@@ -274,7 +341,7 @@ func TestPointClone(t *testing.T) {
 		p.Vals["temp"] = 21.1
 	*/
 
-	p1 := newPointComplete()
+	p1 := testNewPointComplete()
 	p2 := p1.Clone()
 
 	// these should be identical and equal
@@ -306,6 +373,6 @@ func TestPointClone(t *testing.T) {
 
 	p1.Id.val = 3
 	if p2.Id.val == 3 {
-		t.Errorf("changing p1.Id to 3 also changed p2.Ts to 3")
+		t.Errorf("changing p1.Id to 3 also changed p2.Id to 3")
 	}
 }
