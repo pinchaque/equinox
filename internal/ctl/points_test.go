@@ -50,18 +50,39 @@ func TestPointsAdd(t *testing.T) {
 	assert.NoError(t, err)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusCreated, rec.Code)
+	assert.Equal(t, http.StatusCreated, rec.Code) // obj was created
 
-	result := make(map[string]any)
-	err = json.Unmarshal(rec.Body.Bytes(), &result)
+	// unmarshal the response into a JSend response
+	var js mw.JSend
+	err = json.Unmarshal(rec.Body.Bytes(), &js)
 	assert.NoError(t, err)
 
-	for k, v := range result {
-		assert.Equal(t, "xxx", fmt.Sprintf("`%s`: `%s`", k, v))
+	// validate the JSend including raw JSON data that came back
+	assert.Equal(t, "success", js.Status)
+	assert.True(t, js.IsSuccess())
+	assert.Equal(t, "", js.Message)
+	assert.Equal(t, "", js.Code)
+	assert.Contains(t, string(js.Data), `{"point":`)
+	assert.Contains(t, string(js.Data), `"Ts":"2024-01-10T23:01:02Z"`)
+	assert.Contains(t, string(js.Data), `"Vals":{"area":43.1,"temp":21.1}`)
+	assert.Contains(t, string(js.Data), `"Attrs":{"color":"red","shape":"square"}`)
+	assert.NotContains(t, string(js.Data), `"Id":null`) // need an ID returned
+
+	// convert the "point" into a real struct
+	pmap := make(map[string]*core.Point)
+	err = json.Unmarshal(js.Data, &pmap)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(pmap))
+
+	for k, p2 := range pmap {
+		assert.Equal(t, "point", k)
+
+		assert.Equal(t, "2024-01-10 23:01:02 +0000 UTC", p2.Ts.String())
+		assert.True(t, p.Equal(p2))
+		assert.False(t, p.Identical(p2)) // shouldn't be identical - id is now set
+		assert.NotNil(t, p2.Id)
 	}
-
-	// round trip should deliver the same JSON we sent
-	//exp := fmt.Sprintf(`{"data":{"point":%s},"status":"success"}`, data)
-	//assert.Equal(t, exp, rec.Body.String())
-
 }
+
+// TODO test for fail when including ID
+// TODO test for usage of current time if not included

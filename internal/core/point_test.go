@@ -40,6 +40,11 @@ func TestPointCreate(t *testing.T) {
 	if p.Id.String() == "" {
 		t.Errorf("Expected an id, got empty string")
 	}
+
+	// generate new Id and make sure it is different
+	oldId := p.Id.String()
+	p.GenerateId()
+	assert.NotEqual(t, oldId, p.Id.String())
 }
 func TestPointCreateEmptyId(t *testing.T) {
 
@@ -47,6 +52,36 @@ func TestPointCreateEmptyId(t *testing.T) {
 	p := NewPointEmptyId(ts)
 
 	if ts != p.Ts {
+		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
+	}
+
+	if p.Vals == nil {
+		t.Errorf("Values is nil")
+	}
+
+	if len(p.Vals) != 0 {
+		t.Errorf("Expected 0 values, got %d", len(p.Vals))
+	}
+
+	if p.Attrs == nil {
+		t.Errorf("Attrs is nil")
+	}
+
+	if len(p.Attrs) != 0 {
+		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
+	}
+
+	if p.Id != nil {
+		t.Errorf("Expected an id of nil, got %d", p.Id.val)
+	}
+}
+
+func TestPointCreateEmpty(t *testing.T) {
+
+	ts := time.Time{}
+	p := NewPointEmpty()
+
+	if ts != p.Ts { // empty
 		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
 	}
 

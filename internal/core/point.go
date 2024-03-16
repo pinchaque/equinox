@@ -20,7 +20,7 @@ type Point struct {
 // Vals and Attrs to be empty maps.
 func NewPoint(ts time.Time) *Point {
 	p := NewPointEmptyId(ts)
-	p.Id = NewId()
+	p.GenerateId()
 	return p
 }
 
@@ -29,6 +29,16 @@ func NewPoint(ts time.Time) *Point {
 // real points.
 func NewPointEmptyId(ts time.Time) *Point {
 	p := Point{Ts: ts}
+	p.Vals = make(map[string]float64)
+	p.Attrs = make(map[string]string)
+	p.Id = nil
+	return &p
+}
+
+// Creates a new completely empty point. This is useful for when we need a blank
+// point object for unmarshaling.
+func NewPointEmpty() *Point {
+	p := Point{}
 	p.Vals = make(map[string]float64)
 	p.Attrs = make(map[string]string)
 	p.Id = nil
@@ -45,6 +55,11 @@ func PointCmp(a, b *Point) int {
 	} else {
 		return 0
 	}
+}
+
+// Generates a new Id for this Point.
+func (p *Point) GenerateId() {
+	p.Id = NewId()
 }
 
 func (p *Point) String() string {
