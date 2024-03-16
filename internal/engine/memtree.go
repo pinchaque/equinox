@@ -19,7 +19,14 @@ func NewMemTree() *MemTree {
 		r := core.PointCmp(a, b)
 		if r == 0 {
 			// incorporate the ID for strict ordering
-			r = a.Id.Cmp(b.Id)
+			// treat Id=nil as being less than Id != nil
+			if a.Id != nil && b.Id != nil {
+				r = a.Id.Cmp(b.Id)
+			} else if a.Id == nil { // a (nil) < b (!nil)
+				r = -1
+			} else { // b (nil) < a (!nil)
+				r = 1
+			}
 		}
 
 		return r < 0
