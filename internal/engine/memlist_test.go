@@ -14,7 +14,7 @@ func TestMemListConstructBasic(t *testing.T) {
 	assert.Equal(t, 0, ml.Len())
 
 	runtest := func(p []*core.Point, len int) {
-		ml.Add(p)
+		ml.Add(p...)
 		err = ml.validate()
 		assert.Nil(t, err)
 		assert.Equal(t, len, ml.Len())
@@ -35,7 +35,7 @@ func TestMemListString(t *testing.T) {
 
 	assert.Equal(t, "MemList", ml.Name())
 
-	ml.Add(getPoints(5, 2))
+	ml.Add(getPoints(5, 2)...)
 	exp := `MemList: {
 0: [2024-01-10 23:06:02 +0000 UTC] val[area: -0.958924, temp: 0.283662] attr[animal: pig, color: purple, shape: circle]
 1: [2024-01-10 23:07:02 +0000 UTC] val[area: -0.279415, temp: 0.960170] attr[animal: pig, color: purple, shape: circle]
@@ -55,7 +55,7 @@ func TestMemListConstructBatches(t *testing.T) {
 
 		pbatch = append(pbatch, p)
 		if len(pbatch) >= batch { // add in batches
-			err = ml.Add(pbatch)
+			err = ml.Add(pbatch...)
 			assert.Nil(t, err)
 			err = ml.validate()
 			assert.Nil(t, err)
@@ -64,7 +64,7 @@ func TestMemListConstructBatches(t *testing.T) {
 	}
 
 	if len(pbatch) > 0 { // final batch
-		ml.Add(pbatch)
+		ml.Add(pbatch...)
 		assert.Nil(t, err)
 		err = ml.validate()
 		assert.Nil(t, err)

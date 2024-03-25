@@ -55,7 +55,7 @@ func (mt *MemTree) String() string {
 	return fmt.Sprintf("%s: {\n%s\n}", mt.Name(), strings.Join(pstr, "\n"))
 }
 
-func (mt *MemTree) Add(ps []*core.Point) error {
+func (mt *MemTree) Add(ps ...*core.Point) error {
 	for _, p := range ps {
 		mt.buf.ReplaceOrInsert(p)
 	}

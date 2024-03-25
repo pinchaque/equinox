@@ -42,7 +42,7 @@ func PointAdd(c *gin.Context) {
 		p.Ts = time.Now().UTC()
 	}
 	// save the point
-	err = s.IO.Add([]*core.Point{p})
+	err = s.IO.Add(p)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, mw.Error(err.Error()))
 		return

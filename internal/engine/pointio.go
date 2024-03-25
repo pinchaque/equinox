@@ -6,7 +6,7 @@ import (
 )
 
 type PointIO interface {
-	Add(p []*core.Point) error
+	Add(p ...*core.Point) error
 	Len() int
 	Vacuum() error
 	Search(q *query.Query) (*query.QueryExec, error)

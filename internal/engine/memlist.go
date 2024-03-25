@@ -35,7 +35,7 @@ func (ml *MemList) String() string {
 	return fmt.Sprintf("%s: {\n%s\n}", ml.Name(), strings.Join(pstr, "\n"))
 }
 
-func (ml *MemList) Add(ps []*core.Point) error {
+func (ml *MemList) Add(ps ...*core.Point) error {
 	/*
 		we add the slice of points in two steps:
 		(1) sort the slice
@@ -61,18 +61,19 @@ func (ml *MemList) Add(ps []*core.Point) error {
 	for i := len(ps) - 1; i >= 0; {
 		p := ps[i]
 
-		if e == nil {
-			ml.buf.PushFront(p)
+		if e == nil { // at the front of the list
+			ml.buf.PushFront(p) // add to the front
 			i--
 			// keep e as nil because we just want to keep adding to the front
 			// we are guaranteed the next point will be before the last one
 		} else if core.PointCmp(e.Value.(*core.Point), p) <= 0 {
+			// new point should come after existing point
 			ml.buf.InsertAfter(p, e)
 			i--
 			// don't change e because we know the next ps[i] will come before
 			// the one we just inserted
 		} else {
-			// point p needs to come before the current e, so we move it backwards
+			// new point should come before existing point, so we move e backwards
 			// and run the loop again with the same i
 			e = e.Prev()
 		}

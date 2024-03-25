@@ -22,7 +22,7 @@ func TestMemTreeString(t *testing.T) {
 	mt := NewMemTree()
 	assert.Equal(t, "MemTree", mt.Name())
 
-	mt.Add(getPoints(5, 2))
+	mt.Add(getPoints(5, 2)...)
 	exp := `MemTree: {
 0: [2024-01-10 23:06:02 +0000 UTC] val[area: -0.958924, temp: 0.283662] attr[animal: pig, color: purple, shape: circle]
 1: [2024-01-10 23:07:02 +0000 UTC] val[area: -0.279415, temp: 0.960170] attr[animal: pig, color: purple, shape: circle]
@@ -37,7 +37,7 @@ func TestMemTreeConstructBasic(t *testing.T) {
 	assert.Equal(t, 0, mt.Len())
 
 	runtest := func(p []*core.Point, len int) {
-		mt.Add(p)
+		mt.Add(p...)
 		assert.Equal(t, len, mt.Len())
 	}
 
