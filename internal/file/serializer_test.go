@@ -4,6 +4,8 @@ import (
 	"equinox/internal/core"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSerialize(t *testing.T) {
@@ -11,10 +13,7 @@ func TestSerialize(t *testing.T) {
 	const exptime string = "2024-01-10T23:01:02.000000Z"
 	const fmtstr string = "2006-01-02T15:04:05.000000Z"
 
-	if ts.Format(fmtstr) != exptime {
-		t.Errorf("Time format incorrect, expected %s got %s for UTC time %s",
-			exptime, ts.Format(fmtstr), ts.UTC())
-	}
+	assert.Equal(t, exptime, ts.Format(fmtstr))
 
 	p := core.NewPoint(ts)
 	p.Attrs["color"] = "red"
@@ -26,24 +25,14 @@ func TestSerialize(t *testing.T) {
 
 	data, err := s.Serialize(p)
 
-	if err != nil {
-		t.Errorf("Serialization error: %s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	// expected size: 16 + 12*num_values + 8*num_attrs = 16 + 24 + 16 = 56
-	expsize := 56
-	if len(data) != expsize {
-		t.Errorf("Serialization returned %d bytes, expected %d", len(data), expsize)
-	}
+	assert.Equal(t, 56, len(data))
 
 	p2, err := s.Deserialize(data)
 
-	if err != nil {
-		t.Errorf("Deserialization error: %s", err.Error())
-	}
-
-	if !p2.Equal(p) {
-		t.Errorf("Expected %s, got %s", p.String(), p2.String())
-	}
+	assert.Nil(t, err)
+	assert.True(t, p2.Equal(p))
 
 }

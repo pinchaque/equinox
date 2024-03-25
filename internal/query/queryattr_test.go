@@ -4,6 +4,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func testGetAttrs() map[string]string {
@@ -26,21 +28,10 @@ func testAttrsToString(attrs map[string]string) string {
 	return strings.Join(attr, ", ")
 }
 
-func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
-	result := qa.Match(attrs)
-
-	if result != exp {
-		t.Errorf("QueryAttr: attrs{{{%s}}} and query{{{%s}}} expected %t got %t",
-			testAttrsToString(attrs), qa.String(), exp, result)
-	}
-}
-
 func TestAttrString(t *testing.T) {
 
 	fn := func(t *testing.T, q QueryAttr, exp string) {
-		if q.String() != exp {
-			t.Errorf("operator string: expected %s got %s", exp, q.String())
-		}
+		assert.Equal(t, exp, q.String())
 	}
 
 	fn(t, True(), "true")
@@ -56,6 +47,10 @@ func TestAttrString(t *testing.T) {
 	fn(t, Or(t2, t3), "(animal == 'moose') || (shape == 'square')")
 	fn(t, And(t2, t3), "(animal == 'moose') && (shape == 'square')")
 	fn(t, And(t2, Not(t3)), "(animal == 'moose') && (!(shape == 'square'))")
+}
+
+func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
+	assert.Equal(t, exp, qa.Match(attrs))
 }
 
 func TestAttrTrue(t *testing.T) {

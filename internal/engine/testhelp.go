@@ -9,6 +9,8 @@ import (
 	"slices"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func getDurMins(i int) time.Duration {
@@ -57,9 +59,7 @@ func getPointsShuffle(a uint32, n int) []*core.Point {
 }
 
 func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Point) {
-	if len(exp) != len(act) {
-		t.Fatalf("unexpected # of results for query %s: expected %d got %d", q.String(), len(exp), len(act))
-	}
+	assert.Equal(t, len(act), len(exp))
 
 	// sort by ascending time
 	slices.SortFunc(exp, core.PointCmp)
@@ -67,10 +67,7 @@ func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Po
 
 	// now compare one at a time
 	for i := 0; i < len(exp); i++ {
-		if !exp[i].Equal(act[i]) {
-			t.Errorf("unexpected point returned; got \n%s expected \n%s", act[i].String(), exp[i].String())
-		}
-
+		assert.True(t, exp[i].Equal(act[i]))
 	}
 }
 
@@ -78,20 +75,14 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 
 	q := query.NewQuery(mints, maxts, query.True())
 	qe, err := io.Search(q)
-	if err != nil {
-		t.Fatalf("unexpected error when initiating query %s: %s", q.String(), err.Error())
-	}
+	assert.Nil(t, err)
 
 	// fetch results in batches
 	var results []*core.Point
 	batchsize := 10
 	for {
 		rbatch, err := qe.Fetch(batchsize)
-
-		if err != nil {
-			t.Fatalf("unexpected error when fetching %d results for query %s: %s", batchsize, q.String(), err.Error())
-			return
-		}
+		assert.Nil(t, err)
 
 		if false {
 			t.Logf("===== Got batch of %d points ====", len(rbatch))
@@ -111,11 +102,7 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 			expsize = len(exp) - len(results)
 		}
 
-		if expsize != len(rbatch) {
-			t.Fatalf("unexpected # results fetched for query %s: expected %d got %d", q.String(), expsize, len(rbatch))
-			break
-		}
-
+		assert.Equal(t, expsize, len(rbatch))
 		results = append(results, rbatch...)
 	}
 
@@ -149,26 +136,19 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 		pbatch = append(pbatch, p)
 		if len(pbatch) >= batch { // add in batches
 			err = io.Add(pbatch)
-			if err != nil {
-				t.Fatalf("unexpected error when adding %d points: %s", len(pbatch), err.Error())
-			}
-
+			assert.Nil(t, err)
 			pbatch = nil
 		}
 	}
 
 	if len(pbatch) > 0 { // final batch
 		io.Add(pbatch)
-		if err != nil {
-			t.Fatalf("unexpected error when adding %d points: %s", len(pbatch), err.Error())
-		}
+		assert.Nil(t, err)
 		pbatch = nil
 	}
 
 	err = io.Vacuum()
-	if err != nil {
-		t.Fatalf("unexpected error when vacuuming: %s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	// basic query should return all
 	testQuery(t, io, mints, maxts, exp)

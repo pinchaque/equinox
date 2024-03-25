@@ -3,26 +3,21 @@ package engine
 import (
 	"equinox/internal/core"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMemListConstructBasic(t *testing.T) {
 	ml := NewMemList()
 	ps := getPoints(0, 10)
 	var err error
-
-	if ml.Len() != 0 {
-		t.Fatalf("incorrect length expected 0 got %d", ml.Len())
-	}
+	assert.Equal(t, 0, ml.Len())
 
 	runtest := func(p []*core.Point, len int) {
 		ml.Add(p)
 		err = ml.validate()
-		if err != nil {
-			t.Fatalf("validation failed: %s", err.Error())
-		}
-		if ml.Len() != len {
-			t.Fatalf("incorrect length expected %d got %d", len, ml.Len())
-		}
+		assert.Nil(t, err)
+		assert.Equal(t, len, ml.Len())
 	}
 
 	runtest(make([]*core.Point, 0), 0)
@@ -38,20 +33,14 @@ func TestMemListConstructBasic(t *testing.T) {
 func TestMemListString(t *testing.T) {
 	ml := NewMemList()
 
-	exp := "MemList"
-	if ml.Name() != exp {
-		t.Errorf("incorrect Name: expected %s got %s", exp, ml.Name())
-	}
+	assert.Equal(t, "MemList", ml.Name())
 
 	ml.Add(getPoints(5, 2))
-	exp = `MemList: {
+	exp := `MemList: {
 0: [2024-01-10 23:06:02 +0000 UTC] val[area: -0.958924, temp: 0.283662] attr[animal: pig, color: purple, shape: circle]
 1: [2024-01-10 23:07:02 +0000 UTC] val[area: -0.279415, temp: 0.960170] attr[animal: pig, color: purple, shape: circle]
 }`
-	act := ml.String()
-	if exp != act {
-		t.Errorf("incorect MemList string: expected '%s' got '%s'", exp, act)
-	}
+	assert.Equal(t, exp, ml.String())
 }
 
 func TestMemListConstructBatches(t *testing.T) {
@@ -67,26 +56,18 @@ func TestMemListConstructBatches(t *testing.T) {
 		pbatch = append(pbatch, p)
 		if len(pbatch) >= batch { // add in batches
 			err = ml.Add(pbatch)
-			if err != nil {
-				t.Fatalf("unexpected error when adding %d points: %s", len(pbatch), err.Error())
-			}
+			assert.Nil(t, err)
 			err = ml.validate()
-			if err != nil {
-				t.Fatalf("Validation failed: %s", err.Error())
-			}
+			assert.Nil(t, err)
 			pbatch = nil
 		}
 	}
 
 	if len(pbatch) > 0 { // final batch
 		ml.Add(pbatch)
-		if err != nil {
-			t.Fatalf("unexpected error when adding %d points: %s", len(pbatch), err.Error())
-		}
+		assert.Nil(t, err)
 		err = ml.validate()
-		if err != nil {
-			t.Fatalf("Validation failed: %s", err.Error())
-		}
+		assert.Nil(t, err)
 		pbatch = nil
 	}
 }

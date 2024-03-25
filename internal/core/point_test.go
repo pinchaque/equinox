@@ -12,34 +12,12 @@ func TestPointCreate(t *testing.T) {
 
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPoint(ts)
-
-	if ts != p.Ts {
-		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
-	}
-
-	if p.Vals == nil {
-		t.Errorf("Values is nil")
-	}
-
-	if len(p.Vals) != 0 {
-		t.Errorf("Expected 0 values, got %d", len(p.Vals))
-	}
-
-	if p.Attrs == nil {
-		t.Errorf("Attrs is nil")
-	}
-
-	if len(p.Attrs) != 0 {
-		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
-	}
-
-	if p.Id.val <= 0 {
-		t.Errorf("Expected an id >= 0, got %d", p.Id.val)
-	}
-
-	if p.Id.String() == "" {
-		t.Errorf("Expected an id, got empty string")
-	}
+	assert.Equal(t, ts, p.Ts)
+	assert.NotNil(t, p.Vals)
+	assert.Equal(t, 0, len(p.Vals))
+	assert.NotNil(t, p.Attrs)
+	assert.Equal(t, 0, len(p.Attrs))
+	assert.NotEqual(t, "", p.Id.String())
 
 	// generate new Id and make sure it is different
 	oldId := p.Id.String()
@@ -51,29 +29,12 @@ func TestPointCreateEmptyId(t *testing.T) {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 	p := NewPointEmptyId(ts)
 
-	if ts != p.Ts {
-		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
-	}
-
-	if p.Vals == nil {
-		t.Errorf("Values is nil")
-	}
-
-	if len(p.Vals) != 0 {
-		t.Errorf("Expected 0 values, got %d", len(p.Vals))
-	}
-
-	if p.Attrs == nil {
-		t.Errorf("Attrs is nil")
-	}
-
-	if len(p.Attrs) != 0 {
-		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
-	}
-
-	if p.Id != nil {
-		t.Errorf("Expected an id of nil, got %d", p.Id.val)
-	}
+	assert.Equal(t, ts, p.Ts)
+	assert.NotNil(t, p.Vals)
+	assert.Equal(t, 0, len(p.Vals))
+	assert.NotNil(t, p.Attrs)
+	assert.Equal(t, 0, len(p.Attrs))
+	assert.Nil(t, p.Id)
 }
 
 func TestPointCreateEmpty(t *testing.T) {
@@ -81,29 +42,12 @@ func TestPointCreateEmpty(t *testing.T) {
 	ts := time.Time{}
 	p := NewPointEmpty()
 
-	if ts != p.Ts { // empty
-		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
-	}
-
-	if p.Vals == nil {
-		t.Errorf("Values is nil")
-	}
-
-	if len(p.Vals) != 0 {
-		t.Errorf("Expected 0 values, got %d", len(p.Vals))
-	}
-
-	if p.Attrs == nil {
-		t.Errorf("Attrs is nil")
-	}
-
-	if len(p.Attrs) != 0 {
-		t.Errorf("Expected 0 attributes, got %d", len(p.Attrs))
-	}
-
-	if p.Id != nil {
-		t.Errorf("Expected an id of nil, got %d", p.Id.val)
-	}
+	assert.Equal(t, ts, p.Ts)
+	assert.NotNil(t, p.Vals)
+	assert.Equal(t, 0, len(p.Vals))
+	assert.NotNil(t, p.Attrs)
+	assert.Equal(t, 0, len(p.Attrs))
+	assert.Nil(t, p.Id)
 }
 
 func testNewPointComplete() *Point {
@@ -157,17 +101,12 @@ func TestPointCreateComplete(t *testing.T) {
 	p := testNewPointComplete()
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 
-	if ts != p.Ts {
-		t.Errorf("Got %s, wanted %s", p.Ts.UTC(), ts.UTC())
-	}
-
-	if len(p.Vals) != 2 {
-		t.Errorf("Expected 2 values, got %d", len(p.Vals))
-	}
-
-	if len(p.Attrs) != 2 {
-		t.Errorf("Expected 2 attributes, got %d", len(p.Attrs))
-	}
+	assert.Equal(t, ts, p.Ts)
+	assert.NotNil(t, p.Vals)
+	assert.Equal(t, 2, len(p.Vals))
+	assert.NotNil(t, p.Attrs)
+	assert.Equal(t, 2, len(p.Attrs))
+	assert.NotNil(t, p.Id)
 }
 
 func TestPointEqual(t *testing.T) {
@@ -175,27 +114,19 @@ func TestPointEqual(t *testing.T) {
 
 	cmp := func(pt1 *Point, pt2 *Point, exp int) {
 		act := PointCmp(pt1, pt2)
-		if act != exp {
-			t.Errorf("PointCmp(%s, %s) expected %d got %d", pt1.String(), pt2.String(), exp, act)
-		}
+		assert.Equal(t, exp, act)
 	}
 
 	{ // basic equality
 		p2 := testNewPointComplete()
-		if !p1.Equal(p2) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
-		}
-
+		assert.True(t, p1.Equal(p2))
 		cmp(p1, p2, 0)
 	}
 
 	{ // different timestamp
 		p2 := testNewPointComplete()
 		p2.Ts = p2.Ts.AddDate(0, 0, 1)
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
-
+		assert.False(t, p1.Equal(p2))
 		cmp(p1, p2, -1)
 		cmp(p2, p1, 1)
 	}
@@ -205,60 +136,31 @@ func TestPointEqual(t *testing.T) {
 		cmp(p1, p2, 0)
 		p2.Vals["area"] = 43.1004
 		cmp(p1, p2, 0) // only timestamp matters
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.False(t, p1.Equal(p2))
 
-		if !p1.EqualTol(p2, 0.1) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
-		}
-
-		if !p1.EqualTol(p2, 0.01) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
-		}
-
-		if !p1.EqualTol(p2, 0.001) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
-		}
-
-		if !p1.EqualTol(p2, 0.0001) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
-		}
-
-		if !p1.EqualTol(p2, 0.00001) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p1.String(), p2.String())
-		}
-
-		if p1.EqualTol(p2, 0.000001) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
-
-		if p1.EqualTol(p2, 0.0000001) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.True(t, p1.EqualTol(p2, 0.1))
+		assert.True(t, p1.EqualTol(p2, 0.01))
+		assert.True(t, p1.EqualTol(p2, 0.001))
+		assert.True(t, p1.EqualTol(p2, 0.0001))
+		assert.True(t, p1.EqualTol(p2, 0.00001))
+		assert.False(t, p1.EqualTol(p2, 0.000001))
+		assert.False(t, p1.EqualTol(p2, 0.0000001))
 
 		// test 0.00 value
 		p2.Vals["area"] = 0.000
-		if !p2.EqualTol(p2, 0.001) {
-			t.Errorf("Expected equal, got inequal: %s compared to %s", p2.String(), p2.String())
-		}
-
+		assert.True(t, p2.EqualTol(p2, 0.001))
 	}
 
 	{ // add value
 		p2 := testNewPointComplete()
 		p2.Vals["area2"] = 49.999
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.False(t, p1.Equal(p2))
 	}
 
 	{ // delete value
 		p2 := testNewPointComplete()
 		delete(p2.Vals, "area")
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.False(t, p1.Equal(p2))
 	}
 
 	{ // changed attr
@@ -266,9 +168,7 @@ func TestPointEqual(t *testing.T) {
 		cmp(p1, p2, 0)
 		p2.Attrs["color"] = "blue"
 		cmp(p1, p2, 0) // only timestamp matters
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.False(t, p1.Equal(p2))
 	}
 
 	{ // add attr
@@ -276,17 +176,13 @@ func TestPointEqual(t *testing.T) {
 		cmp(p1, p2, 0)
 		p2.Attrs["color2"] = "blue"
 		cmp(p1, p2, 0) // only timestamp matters
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.False(t, p1.Equal(p2))
 	}
 
 	{ // delete attr
 		p2 := testNewPointComplete()
 		delete(p2.Attrs, "color")
-		if p1.Equal(p2) {
-			t.Errorf("Expected inequal, got equal: %s compared to %s", p1.String(), p2.String())
-		}
+		assert.False(t, p1.Equal(p2))
 	}
 }
 
@@ -305,10 +201,7 @@ func TestPointIdentical(t *testing.T) {
 
 	fn := func(pt1 *Point, pt2 *Point, exp bool) {
 		act := pt1.Identical(pt2)
-		if act != exp {
-			t.Errorf("Expected identity %t got %t: [%s]%s compared to [%s]%s",
-				exp, act, pt1.Id.String(), pt1.String(), pt2.Id.String(), pt2.String())
-		}
+		assert.Equal(t, exp, act)
 	}
 
 	fn(p1, p2, false)
@@ -345,34 +238,19 @@ func TestPointClone(t *testing.T) {
 	p2 := p1.Clone()
 
 	// these should be identical and equal
-	if !p1.Equal(p2) {
-		t.Errorf("Expected equal but got inequal: [%s]%s compared to [%s]%s",
-			p1.Id.String(), p1.String(), p2.Id.String(), p2.String())
-	}
-
-	if !p1.Identical(p2) {
-		t.Errorf("Expected identical but got different: [%s]%s compared to [%s]%s",
-			p1.Id.String(), p1.String(), p2.Id.String(), p2.String())
-	}
+	assert.True(t, p1.Equal(p2))
+	assert.True(t, p1.Identical(p2))
 
 	// if we change one it shouldn't affect the other
 	p1.Attrs["shape"] = "triangle"
-	if p2.Attrs["shape"] != "square" {
-		t.Errorf("changing p1.Attrs[shape] to triangle also changed p2.Attrs[shape] to %s", p2.Attrs["shape"])
-	}
+	assert.Equal(t, "square", p2.Attrs["shape"])
 
 	p1.Vals["area"] = 1.0
-	if p2.Vals["area"] != 43.1 {
-		t.Errorf("changing p1.Vals[area] to triangle also changed p2.Vals[area] to %f", p2.Vals["area"])
-	}
+	assert.Equal(t, 43.1, p2.Vals["area"])
 
 	p1.Ts = time.Date(2024, 01, 11, 23, 1, 2, 0, time.UTC)
-	if p2.Ts.String() != "2024-01-10 23:01:02 +0000 UTC" {
-		t.Errorf("changing p1.Ts to %s also changed p2.Ts to %s", p1.Ts.String(), p2.Ts.String())
-	}
+	assert.Equal(t, "2024-01-10 23:01:02 +0000 UTC", p2.Ts.String())
 
 	p1.Id.val = 3
-	if p2.Id.val == 3 {
-		t.Errorf("changing p1.Id to 3 also changed p2.Id to 3")
-	}
+	assert.NotEqual(t, 3, p2.Id.val)
 }
