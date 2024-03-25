@@ -4,6 +4,8 @@ import (
 	"equinox/internal/core"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreate(t *testing.T) {
@@ -12,15 +14,12 @@ func TestCreate(t *testing.T) {
 
 	q := NewQuery(t2, t4, True())
 	exp := "[2024-01-12 13:00:00 +0000 UTC-2024-01-14 13:00:00 +0000 UTC] [true]"
-	if q.String() != exp {
-		t.Errorf("expected string %s got %s", exp, q.String())
-	}
+
+	assert.Equal(t, exp, q.String())
 
 	// make sure start/end inversion is accounted for
 	q = NewQuery(t4, t2, True())
-	if q.String() != exp {
-		t.Errorf("expected string %s got %s", exp, q.String())
-	}
+	assert.Equal(t, exp, q.String())
 }
 
 func TestCmpTime(t *testing.T) {
@@ -34,10 +33,7 @@ func TestCmpTime(t *testing.T) {
 
 	fn := func(ts time.Time, exp int) {
 		act := q.CmpTime(core.NewPoint(ts))
-		if act != exp {
-			t.Errorf("checking %s against query %s: expected %d but got %d",
-				ts.UTC(), q.String(), exp, act)
-		}
+		assert.Equal(t, exp, act)
 	}
 
 	fn(t1, -1)
@@ -62,29 +58,14 @@ func TestQueryAttrs(t *testing.T) {
 	p.Attrs["index"] = "74"
 
 	fnsub := func(q *Query, exp_ts bool, exp_attr bool) {
-		var act bool
-
 		// check attr only match
-		act = q.MatchAttr(p)
-		if act != exp_attr {
-			t.Errorf("MatchAttr(%s) for query {{%s}}: expected %t but got %t",
-				p.String(), q.String(), exp_attr, act)
-		}
+		assert.Equal(t, exp_attr, q.MatchAttr(p))
 
 		// check time only match
-		act = q.MatchTime(p)
-		if act != exp_ts {
-			t.Errorf("MatchTime(%s) for query {{%s}}: expected %t but got %t",
-				p.String(), q.String(), exp_ts, act)
-		}
+		assert.Equal(t, exp_ts, q.MatchTime(p))
 
 		// check timestamp+attr match
-		exp_both := exp_ts && exp_attr
-		act = q.Match(p)
-		if act != exp_both {
-			t.Errorf("Match(%s) for query {{%s}}: expected %t but got %t",
-				p.String(), q.String(), exp_both, act)
-		}
+		assert.Equal(t, exp_ts && exp_attr, q.Match(p))
 	}
 
 	fn := func(qa QueryAttr, exp_attr bool) {
