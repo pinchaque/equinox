@@ -135,14 +135,14 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 
 		pbatch = append(pbatch, p)
 		if len(pbatch) >= batch { // add in batches
-			err = io.Add(pbatch)
+			err = io.Add(pbatch...)
 			assert.Nil(t, err)
 			pbatch = nil
 		}
 	}
 
 	if len(pbatch) > 0 { // final batch
-		io.Add(pbatch)
+		io.Add(pbatch...)
 		assert.Nil(t, err)
 		pbatch = nil
 	}
