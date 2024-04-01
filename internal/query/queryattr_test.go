@@ -207,3 +207,13 @@ func TestAttrLogicCombo(t *testing.T) {
 	runQATest(t, a, Or(t5, t6, t7), true)
 	runQATest(t, a, And(t5, t6, t7), true)
 }
+
+func TestAttrJson(t *testing.T) {
+	f := func(qa QueryAttr, exp string) {
+		b, err := qa.MarshalText()
+		assert.NoError(t, err)
+		assert.Equal(t, exp, string(b))
+	}
+
+	f(Exists("color"), `{"op":"exists","attr":"color"}`)
+}

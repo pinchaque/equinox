@@ -1,6 +1,7 @@
 package query
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,6 +15,12 @@ type QueryAttr interface {
 
 	// Human-readable string representation of the query
 	String() string
+
+	// Implements TextMarshaler interface
+	MarshalText() (text []byte, err error)
+
+	// Implements TextUnmarshaler interface
+	UnmarshalText(text []byte) error
 }
 
 /****************************************************************************
@@ -27,6 +34,16 @@ type QATrue struct{}
 func (qa *QATrue) Match(attrs map[string]string) bool { return true }
 
 func (qa *QATrue) String() string { return "true" }
+
+// TODO: Implements TextMarshaler interface
+func (qa *QATrue) MarshalText() (text []byte, err error) {
+	return []byte(""), nil
+}
+
+// TODO: Implements TextUnmarshaler interface
+func (qa *QATrue) UnmarshalText(text []byte) error {
+	return nil
+}
 
 // Returns new QATrue object
 func True() *QATrue {
@@ -50,6 +67,25 @@ func (qa *QAExists) Match(attrs map[string]string) bool {
 
 func (qa *QAExists) String() string {
 	return fmt.Sprintf("%s exists", qa.k)
+}
+
+type jsonExpr struct {
+	Op    string            `json:"op"`
+	Attr  string            `json:"attr,omitempty"`
+	Val   string            `json:"val,omitempty"`
+	Expr  json.RawMessage   `json:"expr,omitempty"`
+	Exprs []json.RawMessage `json:"exprs,omitempty"`
+}
+
+// Implements TextMarshaler interface
+func (qa *QAExists) MarshalText() (text []byte, err error) {
+	return json.Marshal(jsonExpr{Op: "exists", Attr: qa.k})
+}
+
+// Implements TextUnmarshaler interface
+func (qa *QAExists) UnmarshalText(text []byte) error {
+	qa.k = string(text)
+	return nil
 }
 
 // Returns new QAExists object with specified attribute key
@@ -81,6 +117,16 @@ func (qa *QAEqual) String() string {
 	return fmt.Sprintf("%s == '%s'", qa.k, qa.v)
 }
 
+// TODO: Implements TextMarshaler interface
+func (qa *QAEqual) MarshalText() (text []byte, err error) {
+	return []byte(""), nil
+}
+
+// TODO: Implements TextUnmarshaler interface
+func (qa *QAEqual) UnmarshalText(text []byte) error {
+	return nil
+}
+
 // Returns new QAEqual object with specified attribute key and value
 func Equal(k string, v string) *QAEqual {
 	return &QAEqual{k: k, v: v}
@@ -110,6 +156,16 @@ func (qa *QARegex) String() string {
 	return fmt.Sprintf("%s =~ /%s/", qa.k, qa.re.String())
 }
 
+// TODO: Implements TextMarshaler interface
+func (qa *QARegex) MarshalText() (text []byte, err error) {
+	return []byte(""), nil
+}
+
+// TODO: Implements TextUnmarshaler interface
+func (qa *QARegex) UnmarshalText(text []byte) error {
+	return nil
+}
+
 // Returns new QARegex object with specified attribute key and regex to use
 // when comparing against values.
 func Regex(k string, regex string) *QARegex {
@@ -133,6 +189,16 @@ func (qa *QANot) Match(attrs map[string]string) bool {
 
 func (qa *QANot) String() string {
 	return fmt.Sprintf("!(%s)", qa.qa.String())
+}
+
+// TODO: Implements TextMarshaler interface
+func (qa *QANot) MarshalText() (text []byte, err error) {
+	return []byte(""), nil
+}
+
+// TODO: Implements TextUnmarshaler interface
+func (qa *QANot) UnmarshalText(text []byte) error {
+	return nil
 }
 
 // Returns new QANot object that's the logical inversion of the specified
@@ -175,6 +241,16 @@ func (qa *QAAnd) String() string {
 	return strings.Join(ret, " && ")
 }
 
+// TODO: Implements TextMarshaler interface
+func (qa *QAAnd) MarshalText() (text []byte, err error) {
+	return []byte(""), nil
+}
+
+// TODO: Implements TextUnmarshaler interface
+func (qa *QAAnd) UnmarshalText(text []byte) error {
+	return nil
+}
+
 // Returns new QAAnd object that's the logical inversion of the specified
 // QueryAttr
 func And(qa ...QueryAttr) *QAAnd {
@@ -213,6 +289,16 @@ func (qa *QAOr) String() string {
 	}
 
 	return strings.Join(ret, " || ")
+}
+
+// TODO: Implements TextMarshaler interface
+func (qa *QAOr) MarshalText() (text []byte, err error) {
+	return []byte(""), nil
+}
+
+// TODO: Implements TextUnmarshaler interface
+func (qa *QAOr) UnmarshalText(text []byte) error {
+	return nil
 }
 
 // Returns new QAOr object that's the logical inversion of the specified
