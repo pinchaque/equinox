@@ -68,7 +68,7 @@ func TestQueryAttrs(t *testing.T) {
 		assert.Equal(t, exp_ts && exp_attr, q.Match(p))
 	}
 
-	fn := func(qa QueryAttr, exp_attr bool) {
+	fn := func(qa FilterAttr, exp_attr bool) {
 		// check a few different time ranges
 		fnsub(NewQuery(ts1, ts3, qa), true, exp_attr)
 		fnsub(NewQuery(ts1, ts1, qa), true, exp_attr)

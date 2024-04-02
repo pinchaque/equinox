@@ -1,7 +1,6 @@
 package query
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -9,18 +8,20 @@ import (
 
 // This is the generic interface for querying against attributes that is used
 // within the Query object as well as in composite attribute queries.
-type QueryAttr interface {
+type FilterAttr interface {
 	// Returns true if the specified attributes match this filter
 	Match(attrs map[string]string) bool
 
 	// Human-readable string representation of the query
 	String() string
 
-	// Implements TextMarshaler interface
-	MarshalText() (text []byte, err error)
+	/*
+		// Implements TextMarshaler interface
+		MarshalText() (text []byte, err error)
 
-	// Implements TextUnmarshaler interface
-	UnmarshalText(text []byte) error
+		// Implements TextUnmarshaler interface
+		UnmarshalText(text []byte) error
+	*/
 }
 
 /****************************************************************************
@@ -34,16 +35,6 @@ type QATrue struct{}
 func (qa *QATrue) Match(attrs map[string]string) bool { return true }
 
 func (qa *QATrue) String() string { return "true" }
-
-// TODO: Implements TextMarshaler interface
-func (qa *QATrue) MarshalText() (text []byte, err error) {
-	return []byte(""), nil
-}
-
-// TODO: Implements TextUnmarshaler interface
-func (qa *QATrue) UnmarshalText(text []byte) error {
-	return nil
-}
 
 // Returns new QATrue object
 func True() *QATrue {
@@ -69,14 +60,7 @@ func (qa *QAExists) String() string {
 	return fmt.Sprintf("%s exists", qa.k)
 }
 
-type jsonExpr struct {
-	Op    string            `json:"op"`
-	Attr  string            `json:"attr,omitempty"`
-	Val   string            `json:"val,omitempty"`
-	Expr  json.RawMessage   `json:"expr,omitempty"`
-	Exprs []json.RawMessage `json:"exprs,omitempty"`
-}
-
+/*
 // Implements TextMarshaler interface
 func (qa *QAExists) MarshalText() (text []byte, err error) {
 	return json.Marshal(jsonExpr{Op: "exists", Attr: qa.k})
@@ -87,6 +71,7 @@ func (qa *QAExists) UnmarshalText(text []byte) error {
 	qa.k = string(text)
 	return nil
 }
+*/
 
 // Returns new QAExists object with specified attribute key
 func Exists(k string) *QAExists {
@@ -117,6 +102,7 @@ func (qa *QAEqual) String() string {
 	return fmt.Sprintf("%s == '%s'", qa.k, qa.v)
 }
 
+/*
 // TODO: Implements TextMarshaler interface
 func (qa *QAEqual) MarshalText() (text []byte, err error) {
 	return []byte(""), nil
@@ -126,6 +112,7 @@ func (qa *QAEqual) MarshalText() (text []byte, err error) {
 func (qa *QAEqual) UnmarshalText(text []byte) error {
 	return nil
 }
+*/
 
 // Returns new QAEqual object with specified attribute key and value
 func Equal(k string, v string) *QAEqual {
@@ -156,6 +143,7 @@ func (qa *QARegex) String() string {
 	return fmt.Sprintf("%s =~ /%s/", qa.k, qa.re.String())
 }
 
+/*
 // TODO: Implements TextMarshaler interface
 func (qa *QARegex) MarshalText() (text []byte, err error) {
 	return []byte(""), nil
@@ -165,6 +153,7 @@ func (qa *QARegex) MarshalText() (text []byte, err error) {
 func (qa *QARegex) UnmarshalText(text []byte) error {
 	return nil
 }
+*/
 
 // Returns new QARegex object with specified attribute key and regex to use
 // when comparing against values.
@@ -179,7 +168,7 @@ func Regex(k string, regex string) *QARegex {
 
 // Represents logical inversion (NOT)
 type QANot struct {
-	qa QueryAttr
+	qa FilterAttr
 }
 
 // Returns logical inversion (NOT) of the contained QueryAttr
@@ -191,6 +180,7 @@ func (qa *QANot) String() string {
 	return fmt.Sprintf("!(%s)", qa.qa.String())
 }
 
+/*
 // TODO: Implements TextMarshaler interface
 func (qa *QANot) MarshalText() (text []byte, err error) {
 	return []byte(""), nil
@@ -200,10 +190,11 @@ func (qa *QANot) MarshalText() (text []byte, err error) {
 func (qa *QANot) UnmarshalText(text []byte) error {
 	return nil
 }
+*/
 
 // Returns new QANot object that's the logical inversion of the specified
 // QueryAttr
-func Not(qa QueryAttr) *QANot {
+func Not(qa FilterAttr) *QANot {
 	return &QANot{qa: qa}
 }
 
@@ -213,7 +204,7 @@ func Not(qa QueryAttr) *QANot {
 
 // Represents logical conjunction (AND)
 type QAAnd struct {
-	qa []QueryAttr
+	qa []FilterAttr
 }
 
 // Returns logical conjunction (AND) of the contained QueryAttrs
@@ -241,6 +232,7 @@ func (qa *QAAnd) String() string {
 	return strings.Join(ret, " && ")
 }
 
+/*
 // TODO: Implements TextMarshaler interface
 func (qa *QAAnd) MarshalText() (text []byte, err error) {
 	return []byte(""), nil
@@ -250,10 +242,11 @@ func (qa *QAAnd) MarshalText() (text []byte, err error) {
 func (qa *QAAnd) UnmarshalText(text []byte) error {
 	return nil
 }
+*/
 
 // Returns new QAAnd object that's the logical inversion of the specified
 // QueryAttr
-func And(qa ...QueryAttr) *QAAnd {
+func And(qa ...FilterAttr) *QAAnd {
 	return &QAAnd{qa: qa}
 }
 
@@ -263,7 +256,7 @@ func And(qa ...QueryAttr) *QAAnd {
 
 // Represents logical disjunction (OR)
 type QAOr struct {
-	qa []QueryAttr
+	qa []FilterAttr
 }
 
 // Returns logical disjunction (OR) of the contained QueryAttrs
@@ -291,6 +284,7 @@ func (qa *QAOr) String() string {
 	return strings.Join(ret, " || ")
 }
 
+/*
 // TODO: Implements TextMarshaler interface
 func (qa *QAOr) MarshalText() (text []byte, err error) {
 	return []byte(""), nil
@@ -300,9 +294,10 @@ func (qa *QAOr) MarshalText() (text []byte, err error) {
 func (qa *QAOr) UnmarshalText(text []byte) error {
 	return nil
 }
+*/
 
 // Returns new QAOr object that's the logical inversion of the specified
 // QueryAttr
-func Or(qa ...QueryAttr) *QAOr {
+func Or(qa ...FilterAttr) *QAOr {
 	return &QAOr{qa: qa}
 }

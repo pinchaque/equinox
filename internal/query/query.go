@@ -12,10 +12,10 @@ import (
 type Query struct {
 	Start time.Time
 	End   time.Time
-	QA    QueryAttr
+	QA    FilterAttr
 }
 
-func NewQuery(start time.Time, end time.Time, qa QueryAttr) *Query {
+func NewQuery(start time.Time, end time.Time, qa FilterAttr) *Query {
 	q := Query{Start: start, End: end, QA: qa}
 
 	// ensure times are in correct order

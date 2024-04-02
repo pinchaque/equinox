@@ -30,7 +30,7 @@ func testAttrsToString(attrs map[string]string) string {
 
 func TestAttrString(t *testing.T) {
 
-	fn := func(t *testing.T, q QueryAttr, exp string) {
+	fn := func(t *testing.T, q FilterAttr, exp string) {
 		assert.Equal(t, exp, q.String())
 	}
 
@@ -49,7 +49,7 @@ func TestAttrString(t *testing.T) {
 	fn(t, And(t2, Not(t3)), "(animal == 'moose') && (!(shape == 'square'))")
 }
 
-func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
+func runQATest(t *testing.T, attrs map[string]string, qa FilterAttr, exp bool) {
 	assert.Equal(t, exp, qa.Match(attrs))
 }
 
@@ -208,12 +208,16 @@ func TestAttrLogicCombo(t *testing.T) {
 	runQATest(t, a, And(t5, t6, t7), true)
 }
 
+/*
 func TestAttrJson(t *testing.T) {
-	f := func(qa QueryAttr, exp string) {
+	f := func(qa FilterAttr, exp string) {
 		b, err := qa.MarshalText()
 		assert.NoError(t, err)
 		assert.Equal(t, exp, string(b))
+
+		qa2
 	}
 
 	f(Exists("color"), `{"op":"exists","attr":"color"}`)
 }
+*/
