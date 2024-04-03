@@ -4,11 +4,6 @@ import (
 	"encoding/json"
 )
 
-// Interface to how the filters match
-type FilterMatch interface {
-	Match(attrs map[string]string) bool
-}
-
 // Enum-style type to represent the allowed operators
 type FilterOp string
 
@@ -22,15 +17,13 @@ const (
 	OpNot    FilterOp = "not"
 )
 
-// This is the generic interface for querying against attributes that is used
-// within the Query object as well as in composite attribute queries.
+// Data struct that is used to marshal/unmarshal the JSON representation of
+// FilterAttrs.
 type FilterAttrJson struct {
-	Op        FilterOp          `json:"op"`
-	Attr      string            `json:"attr,omitempty"`
-	Val       string            `json:"val,omitempty"`
-	JsonExprs []json.RawMessage `json:"exprs,omitempty"`
-	Exprs     []*FilterAttr     `json:"-"`
-	MatchFn   FilterMatch       `json:"-"`
+	Op    FilterOp          `json:"op"`
+	Attr  string            `json:"attr,omitempty"`
+	Val   string            `json:"val,omitempty"`
+	Exprs []json.RawMessage `json:"exprs,omitempty"`
 }
 
 // Implements TextMarshaler interface
