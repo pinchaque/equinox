@@ -40,168 +40,168 @@ func createExprs(fa ...FilterAttr) ([]json.RawMessage, error) {
 }
 
 /****************************************************************************
-	QATrue
+	FATrue
 ****************************************************************************/
 
 // Always returns true; useful as a no-op
-type QATrue struct{}
+type FATrue struct{}
 
 // Always returns true
-func (qa *QATrue) Match(attrs map[string]string) bool { return true }
+func (fa *FATrue) Match(attrs map[string]string) bool { return true }
 
-func (qa *QATrue) String() string { return "true" }
+func (fa *FATrue) String() string { return "true" }
 
 // Implements TextMarshaler interface
-func (qa *QATrue) MarshalText() ([]byte, error) {
+func (fa *FATrue) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpTrue})
 }
 
 // Implements TextUnmarshaler interface
-func (qa *QATrue) UnmarshalText(text []byte) error {
+func (fa *FATrue) UnmarshalText(text []byte) error {
 	return nil
 }
 
 // Returns new QATrue object
-func True() *QATrue {
-	return &QATrue{}
+func True() *FATrue {
+	return &FATrue{}
 }
 
 /****************************************************************************
-	QAExist - Exists
+	FAExist - Exists
 ****************************************************************************/
 
 // Represents whether an attribute exists
-type QAExists struct {
+type FAExists struct {
 	k string
 }
 
 // Returns true if this query attribute exists (can be empty)
-func (qa *QAExists) Match(attrs map[string]string) bool {
-	_, exists := attrs[qa.k]
+func (fa *FAExists) Match(attrs map[string]string) bool {
+	_, exists := attrs[fa.k]
 	return exists
 }
 
-func (qa *QAExists) String() string {
-	return fmt.Sprintf("%s exists", qa.k)
+func (fa *FAExists) String() string {
+	return fmt.Sprintf("%s exists", fa.k)
 }
 
 // Implements TextMarshaler interface
-func (qa *QAExists) MarshalText() ([]byte, error) {
-	return json.Marshal(FilterAttrJson{Op: OpExists, Attr: qa.k})
+func (fa *FAExists) MarshalText() ([]byte, error) {
+	return json.Marshal(FilterAttrJson{Op: OpExists, Attr: fa.k})
 }
 
 // Implements TextUnmarshaler interface
-func (qa *QAExists) UnmarshalText(text []byte) error {
-	qa.k = string(text)
+func (fa *FAExists) UnmarshalText(text []byte) error {
+	fa.k = string(text)
 	return nil
 }
 
 // Returns new QAExists object with specified attribute key
-func Exists(k string) *QAExists {
-	return &QAExists{k: k}
+func Exists(k string) *FAExists {
+	return &FAExists{k: k}
 }
 
 /****************************************************************************
-	QAEqual - Equality
+	FAEqual - Equality
 ****************************************************************************/
 
 // Represents an attribute equality comparison for a given key
-type QAEqual struct {
+type FAEqual struct {
 	k string
 	v string
 }
 
 // Returns true if this query attribute comparison matches the given attribute
 // map.
-func (qa *QAEqual) Match(attrs map[string]string) bool {
-	v, exists := attrs[qa.k]
+func (fa *FAEqual) Match(attrs map[string]string) bool {
+	v, exists := attrs[fa.k]
 
 	// if the attribute doesn't exist then it's not a match
 	// otherwise must be exact match
-	return exists && (v == qa.v)
+	return exists && (v == fa.v)
 }
 
-func (qa *QAEqual) String() string {
-	return fmt.Sprintf("%s == '%s'", qa.k, qa.v)
+func (fa *FAEqual) String() string {
+	return fmt.Sprintf("%s == '%s'", fa.k, fa.v)
 }
 
 // Implements TextMarshaler interface
-func (qa *QAEqual) MarshalText() ([]byte, error) {
-	return json.Marshal(FilterAttrJson{Op: OpEqual, Attr: qa.k, Val: qa.v})
+func (fa *FAEqual) MarshalText() ([]byte, error) {
+	return json.Marshal(FilterAttrJson{Op: OpEqual, Attr: fa.k, Val: fa.v})
 }
 
 // TODO: Implements TextUnmarshaler interface
-func (qa *QAEqual) UnmarshalText(text []byte) error {
+func (fa *FAEqual) UnmarshalText(text []byte) error {
 	return nil
 }
 
 // Returns new QAEqual object with specified attribute key and value
-func Equal(k string, v string) *QAEqual {
-	return &QAEqual{k: k, v: v}
+func Equal(k string, v string) *FAEqual {
+	return &FAEqual{k: k, v: v}
 }
 
 /****************************************************************************
-	QARegex - Regular Expression
+	FARegex - Regular Expression
 ****************************************************************************/
 
 // Represents an attribute equality comparison for a given key
-type QARegex struct {
+type FARegex struct {
 	k  string
 	re *regexp.Regexp
 }
 
 // Returns true if this query attribute comparison matches the given attribute
 // map.
-func (qa *QARegex) Match(attrs map[string]string) bool {
-	v, exists := attrs[qa.k]
+func (fa *FARegex) Match(attrs map[string]string) bool {
+	v, exists := attrs[fa.k]
 
 	// if the attribute doesn't exist then it's not a match
 	// compare value to compiled regexp
-	return exists && qa.re.MatchString(v)
+	return exists && fa.re.MatchString(v)
 }
 
-func (qa *QARegex) String() string {
-	return fmt.Sprintf("%s =~ /%s/", qa.k, qa.re.String())
+func (fa *FARegex) String() string {
+	return fmt.Sprintf("%s =~ /%s/", fa.k, fa.re.String())
 }
 
 // Implements TextMarshaler interface
-func (qa *QARegex) MarshalText() ([]byte, error) {
-	return json.Marshal(FilterAttrJson{Op: OpRegex, Attr: qa.k, Val: qa.re.String()})
+func (fa *FARegex) MarshalText() ([]byte, error) {
+	return json.Marshal(FilterAttrJson{Op: OpRegex, Attr: fa.k, Val: fa.re.String()})
 }
 
 // TODO: Implements TextUnmarshaler interface
-func (qa *QARegex) UnmarshalText(text []byte) error {
+func (fa *FARegex) UnmarshalText(text []byte) error {
 	return nil
 }
 
 // Returns new QARegex object with specified attribute key and regex to use
 // when comparing against values.
-func Regex(k string, regex string) *QARegex {
+func Regex(k string, regex string) *FARegex {
 	re := regexp.MustCompile(regex)
-	return &QARegex{k: k, re: re}
+	return &FARegex{k: k, re: re}
 }
 
 /****************************************************************************
-	QANot - Logical NOT
+	FANot - Logical NOT
 ****************************************************************************/
 
 // Represents logical inversion (NOT)
-type QANot struct {
-	qa FilterAttr
+type FANot struct {
+	fa FilterAttr
 }
 
 // Returns logical inversion (NOT) of the contained QueryAttr
-func (qa *QANot) Match(attrs map[string]string) bool {
-	return !qa.qa.Match(attrs)
+func (fa *FANot) Match(attrs map[string]string) bool {
+	return !fa.fa.Match(attrs)
 }
 
-func (qa *QANot) String() string {
-	return fmt.Sprintf("!(%s)", qa.qa.String())
+func (fa *FANot) String() string {
+	return fmt.Sprintf("!(%s)", fa.fa.String())
 }
 
 // Implements TextMarshaler interface
-func (qa *QANot) MarshalText() ([]byte, error) {
-	exprs, err := createExprs(qa.qa)
+func (fa *FANot) MarshalText() ([]byte, error) {
+	exprs, err := createExprs(fa.fa)
 	if err != nil {
 		return []byte(""), err
 	}
@@ -210,33 +210,33 @@ func (qa *QANot) MarshalText() ([]byte, error) {
 }
 
 // TODO: Implements TextUnmarshaler interface
-func (qa *QANot) UnmarshalText(text []byte) error {
+func (fa *FANot) UnmarshalText(text []byte) error {
 	return nil
 }
 
 // Returns new QANot object that's the logical inversion of the specified
 // QueryAttr
-func Not(qa FilterAttr) *QANot {
-	return &QANot{qa: qa}
+func Not(fa FilterAttr) *FANot {
+	return &FANot{fa: fa}
 }
 
 /****************************************************************************
-	QAAnd - Logical AND
+	FAAnd - Logical AND
 ****************************************************************************/
 
 // Represents logical conjunction (AND)
-type QAAnd struct {
-	qa []FilterAttr
+type FAAnd struct {
+	fa []FilterAttr
 }
 
 // Returns logical conjunction (AND) of the contained QueryAttrs
-func (qa *QAAnd) Match(attrs map[string]string) bool {
-	if len(qa.qa) == 0 {
+func (fa *FAAnd) Match(attrs map[string]string) bool {
+	if len(fa.fa) == 0 {
 		return false
 	}
 
-	for i := 0; i < len(qa.qa); i++ {
-		if !qa.qa[i].Match(attrs) {
+	for i := 0; i < len(fa.fa); i++ {
+		if !fa.fa[i].Match(attrs) {
 			return false
 		}
 	}
@@ -244,19 +244,19 @@ func (qa *QAAnd) Match(attrs map[string]string) bool {
 	return true
 }
 
-func (qa *QAAnd) String() string {
+func (fa *FAAnd) String() string {
 	var ret []string
 
-	for i := 0; i < len(qa.qa); i++ {
-		ret = append(ret, "("+qa.qa[i].String()+")")
+	for i := 0; i < len(fa.fa); i++ {
+		ret = append(ret, "("+fa.fa[i].String()+")")
 	}
 
 	return strings.Join(ret, " && ")
 }
 
 // Implements TextMarshaler interface
-func (qa *QAAnd) MarshalText() ([]byte, error) {
-	exprs, err := createExprs(qa.qa...)
+func (fa *FAAnd) MarshalText() ([]byte, error) {
+	exprs, err := createExprs(fa.fa...)
 	if err != nil {
 		return []byte(""), err
 	}
@@ -265,33 +265,33 @@ func (qa *QAAnd) MarshalText() ([]byte, error) {
 }
 
 // TODO: Implements TextUnmarshaler interface
-func (qa *QAAnd) UnmarshalText(text []byte) error {
+func (fa *FAAnd) UnmarshalText(text []byte) error {
 	return nil
 }
 
 // Returns new QAAnd object that's the logical inversion of the specified
 // QueryAttr
-func And(qa ...FilterAttr) *QAAnd {
-	return &QAAnd{qa: qa}
+func And(fa ...FilterAttr) *FAAnd {
+	return &FAAnd{fa: fa}
 }
 
 /****************************************************************************
-	QAOr - Logical OR
+	FAOr - Logical OR
 ****************************************************************************/
 
 // Represents logical disjunction (OR)
-type QAOr struct {
-	qa []FilterAttr
+type FAOr struct {
+	fa []FilterAttr
 }
 
 // Returns logical disjunction (OR) of the contained QueryAttrs
-func (qa *QAOr) Match(attrs map[string]string) bool {
-	if len(qa.qa) == 0 {
+func (fa *FAOr) Match(attrs map[string]string) bool {
+	if len(fa.fa) == 0 {
 		return false
 	}
 
-	for i := 0; i < len(qa.qa); i++ {
-		if qa.qa[i].Match(attrs) {
+	for i := 0; i < len(fa.fa); i++ {
+		if fa.fa[i].Match(attrs) {
 			return true
 		}
 	}
@@ -299,19 +299,19 @@ func (qa *QAOr) Match(attrs map[string]string) bool {
 	return false
 }
 
-func (qa *QAOr) String() string {
+func (fa *FAOr) String() string {
 	var ret []string
 
-	for i := 0; i < len(qa.qa); i++ {
-		ret = append(ret, "("+qa.qa[i].String()+")")
+	for i := 0; i < len(fa.fa); i++ {
+		ret = append(ret, "("+fa.fa[i].String()+")")
 	}
 
 	return strings.Join(ret, " || ")
 }
 
 // Implements TextMarshaler interface
-func (qa *QAOr) MarshalText() ([]byte, error) {
-	exprs, err := createExprs(qa.qa...)
+func (fa *FAOr) MarshalText() ([]byte, error) {
+	exprs, err := createExprs(fa.fa...)
 	if err != nil {
 		return []byte(""), err
 	}
@@ -320,12 +320,12 @@ func (qa *QAOr) MarshalText() ([]byte, error) {
 }
 
 // TODO: Implements TextUnmarshaler interface
-func (qa *QAOr) UnmarshalText(text []byte) error {
+func (fa *FAOr) UnmarshalText(text []byte) error {
 	return nil
 }
 
 // Returns new QAOr object that's the logical inversion of the specified
 // QueryAttr
-func Or(qa ...FilterAttr) *QAOr {
-	return &QAOr{qa: qa}
+func Or(fa ...FilterAttr) *FAOr {
+	return &FAOr{fa: fa}
 }
