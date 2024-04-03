@@ -1,8 +1,6 @@
 package query
 
 import (
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,17 +13,6 @@ func testGetAttrs() map[string]string {
 	r["shape"] = "square"
 	r["index"] = "74"
 	return r
-}
-
-func testAttrsToString(attrs map[string]string) string {
-	var attr []string
-
-	for k, v := range attrs {
-		attr = append(attr, k+": "+v)
-	}
-	sort.Strings(attr) // ensure consistent output
-
-	return strings.Join(attr, ", ")
 }
 
 func TestAttrString(t *testing.T) {
@@ -206,4 +193,43 @@ func TestAttrLogicCombo(t *testing.T) {
 	runQATest(t, a, And(f5, f6, f7), false)
 	runQATest(t, a, Or(t5, t6, t7), true)
 	runQATest(t, a, And(t5, t6, t7), true)
+}
+
+func TestFilterAttrMarshal(t *testing.T) {
+	f := func(qa FilterAttr, exp string) {
+		b, err := qa.MarshalText()
+		assert.NoError(t, err)
+		assert.Equal(t, exp, string(b))
+	}
+
+	// basic exprs
+	f(True(), `{"op":"true"}`)
+	f(Exists("color"), `{"op":"exists","attr":"color"}`)
+	f(Equal("color", "blue"), `{"op":"equal","attr":"color","val":"blue"}`)
+	f(Regex("animal", "mo{3,5}se"), `{"op":"regex","attr":"animal","val":"mo{3,5}se"}`)
+
+	// more complex exprs
+	e1 := Equal("color", "blue")
+	j1 := `{"op":"equal","attr":"color","val":"blue"}`
+	f(e1, j1)
+
+	e2 := Regex("animal", "mo{3,5}se")
+	j2 := `{"op":"regex","attr":"animal","val":"mo{3,5}se"}`
+	f(e2, j2)
+
+	f(Not(e1), `{"op":"not","exprs":[`+j1+`]}`)
+	f(Not(e2), `{"op":"not","exprs":[`+j2+`]}`)
+	f(Or(e2), `{"op":"or","exprs":[`+j2+`]}`)
+	f(Or(e2, e1), `{"op":"or","exprs":[`+j2+","+j1+`]}`)
+	f(And(e2, e1), `{"op":"and","exprs":[`+j2+","+j1+`]}`)
+
+	// even more complex
+	e3 := Or(e2, e1)
+	j3 := `{"op":"or","exprs":[` + j2 + "," + j1 + `]}`
+	f(e3, j3)
+	e4 := Not(e2)
+	j4 := `{"op":"not","exprs":[` + j2 + `]}`
+	f(e4, j4)
+	f(And(e3, e4), `{"op":"and","exprs":[`+j3+","+j4+`]}`)
+	f(Or(e3, e4, Not(True())), `{"op":"or","exprs":[`+j3+","+j4+`,{"op":"not","exprs":[{"op":"true"}]}]}`)
 }
