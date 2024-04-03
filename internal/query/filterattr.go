@@ -39,6 +39,28 @@ func createExprs(fa ...FilterAttr) ([]json.RawMessage, error) {
 	return exprs, nil
 }
 
+// Unmarshals the specified JSON string into a hierarchy of FilterAttr objects.
+// We can't use the standard UnmarshalText() function because we don't know
+// what type of FilterAttr objects to instantiate.
+func UnmarshalFilterAttr(text []byte) (FilterAttr, error) {
+	j := FilterAttrJson{}
+	err := json.Unmarshal(text, &j)
+	if err != nil {
+		return nil, err
+	}
+
+	switch j.Op {
+	case OpTrue:
+	case OpExists:
+	case OpEqual:
+	case OpRegex:
+	case OpAnd:
+	case OpOr:
+	case OpNot:
+	default:
+	}
+}
+
 /****************************************************************************
 	FATrue
 ****************************************************************************/

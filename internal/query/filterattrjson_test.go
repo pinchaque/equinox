@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFilterAttrJson(t *testing.T) {
+func TestFilterAttrJsonxxx(t *testing.T) {
 	f := func(qa FilterAttr, exp string) {
 		b, err := qa.MarshalText()
 		assert.NoError(t, err)
