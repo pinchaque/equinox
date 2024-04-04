@@ -204,7 +204,9 @@ func TestFilterAttrJson(t *testing.T) {
 
 		// now try unmarshaling that same string
 		fa2, err := UnmarshalFilterAttr([]byte(exp))
-		assert.NoError(t, err)
+		if !assert.NoError(t, err) {
+			return
+		}
 
 		// strings should be equal
 		assert.Equal(t, fa.String(), fa2.String())
@@ -218,7 +220,6 @@ func TestFilterAttrJson(t *testing.T) {
 	// basic exprs
 	f(True(), `{"op":"true"}`)
 	f(Exists("color"), `{"op":"exists","attr":"color"}`)
-	return // TODO finish this
 	f(Equal("color", "blue"), `{"op":"equal","attr":"color","val":"blue"}`)
 	f(Regex("animal", "mo{3,5}se"), `{"op":"regex","attr":"animal","val":"mo{3,5}se"}`)
 

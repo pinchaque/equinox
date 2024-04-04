@@ -19,11 +19,12 @@ type FilterAttr interface {
 	// Implements TextMarshaler interface
 	MarshalText() ([]byte, error)
 
-	// Implements TextUnmarshaler interface
-	UnmarshalText(text []byte) error
+	// Unmarshals this object from a FilterAttrJson struct, returning an error
+	// if the JSON struct doesn't have the correct fields.
+	unmarshalStruct(j *FilterAttrJson) error
 }
 
-// helper function that creates a slice of json.RawMessage attributes from a
+// Helper function that creates a slice of json.RawMessage attributes from a
 // slice of FilterAttrs
 func createExprs(fa ...FilterAttr) ([]json.RawMessage, error) {
 	exprs := make([]json.RawMessage, 0, len(fa))
@@ -39,26 +40,52 @@ func createExprs(fa ...FilterAttr) ([]json.RawMessage, error) {
 	return exprs, nil
 }
 
+// Factory function that creates the correct FilterAttr object for the
+// specified FilterOp.
+func createFilterAttr(op FilterOp) (FilterAttr, error) {
+
+	switch op {
+	case OpTrue:
+		return &FATrue{}, nil
+	case OpExists:
+		return &FAExists{}, nil
+	case OpEqual:
+		return &FAEqual{}, nil
+	case OpRegex:
+		return &FARegex{}, nil
+	case OpAnd:
+		return &FAAnd{}, nil
+	case OpOr:
+		return &FAOr{}, nil
+	case OpNot:
+		return &FANot{}, nil
+
+	default:
+		return nil, fmt.Errorf("unrecognized filter operator %s", op)
+	}
+}
+
 // Unmarshals the specified JSON string into a hierarchy of FilterAttr objects.
-// We can't use the standard UnmarshalText() function because we don't know
-// what type of FilterAttr objects to instantiate.
+// We can't use the standard UnmarshalText() functions directly because we don't
+// know what type of FilterAttr object to instantiate.
 func UnmarshalFilterAttr(text []byte) (FilterAttr, error) {
-	j := FilterAttrJson{}
-	err := json.Unmarshal(text, &j)
+	j := newFilterAttrJson()
+	err := json.Unmarshal(text, j)
 	if err != nil {
 		return nil, err
 	}
 
-	switch j.Op {
-	case OpTrue:
-	case OpExists:
-	case OpEqual:
-	case OpRegex:
-	case OpAnd:
-	case OpOr:
-	case OpNot:
-	default:
+	fa, err := createFilterAttr(j.Op)
+	if err != nil {
+		return nil, err
 	}
+
+	err = fa.unmarshalStruct(j)
+	if err != nil {
+		return nil, err
+	}
+
+	return fa, nil
 }
 
 /****************************************************************************
@@ -78,8 +105,23 @@ func (fa *FATrue) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpTrue})
 }
 
-// Implements TextUnmarshaler interface
-func (fa *FATrue) UnmarshalText(text []byte) error {
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FATrue) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FATrue"
+	if j.Op != OpTrue {
+		return fmt.Errorf("%s: Op should be %s", s, OpTrue)
+	}
+	if len(j.Exprs) != 0 {
+		return fmt.Errorf("%s: Exprs should be empty", s)
+	}
+	if j.Attr != "" {
+		return fmt.Errorf("%s: Attr should be empty", s)
+	}
+	if j.Val != "" {
+		return fmt.Errorf("%s: Val must be empty", s)
+	}
+
 	return nil
 }
 
@@ -112,9 +154,24 @@ func (fa *FAExists) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpExists, Attr: fa.k})
 }
 
-// Implements TextUnmarshaler interface
-func (fa *FAExists) UnmarshalText(text []byte) error {
-	fa.k = string(text)
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FAExists) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FAExists"
+	if j.Op != OpExists {
+		return fmt.Errorf("%s: Op should be %s", s, OpExists)
+	}
+	if len(j.Exprs) != 0 {
+		return fmt.Errorf("%s: Exprs should be empty", s)
+	}
+	if j.Attr == "" {
+		return fmt.Errorf("%s: Attr cannot be empty", s)
+	}
+	if j.Val != "" {
+		return fmt.Errorf("%s: Val must be empty", s)
+	}
+
+	fa.k = j.Attr
 	return nil
 }
 
@@ -152,8 +209,23 @@ func (fa *FAEqual) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpEqual, Attr: fa.k, Val: fa.v})
 }
 
-// TODO: Implements TextUnmarshaler interface
-func (fa *FAEqual) UnmarshalText(text []byte) error {
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FAEqual) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FAEqual"
+	if j.Op != OpEqual {
+		return fmt.Errorf("%s: Op should be %s", s, OpEqual)
+	}
+	if len(j.Exprs) != 0 {
+		return fmt.Errorf("%s: Exprs should be empty", s)
+	}
+	if j.Attr == "" {
+		return fmt.Errorf("%s: Attr cannot be empty", s)
+	}
+	// let val be empty or not
+
+	fa.k = j.Attr
+	fa.v = j.Val
 	return nil
 }
 
@@ -191,8 +263,25 @@ func (fa *FARegex) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpRegex, Attr: fa.k, Val: fa.re.String()})
 }
 
-// TODO: Implements TextUnmarshaler interface
-func (fa *FARegex) UnmarshalText(text []byte) error {
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FARegex) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FARegex"
+	if j.Op != OpRegex {
+		return fmt.Errorf("%s: Op should be %s", s, OpRegex)
+	}
+	if len(j.Exprs) != 0 {
+		return fmt.Errorf("%s: Exprs should be empty", s)
+	}
+	if j.Attr == "" {
+		return fmt.Errorf("%s: Attr cannot be empty", s)
+	}
+	if j.Val == "" {
+		return fmt.Errorf("%s: Val cannot be empty", s)
+	}
+
+	fa.k = j.Attr
+	fa.re = regexp.MustCompile(j.Val)
 	return nil
 }
 
@@ -231,8 +320,31 @@ func (fa *FANot) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpNot, Exprs: exprs})
 }
 
-// TODO: Implements TextUnmarshaler interface
-func (fa *FANot) UnmarshalText(text []byte) error {
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FANot) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FANot"
+	if j.Op != OpNot {
+		return fmt.Errorf("%s: Op should be %s", s, OpNot)
+	}
+	if len(j.Exprs) != 1 {
+		return fmt.Errorf("%s: Must have a single Exprs", s)
+	}
+	if j.Attr != "" {
+		return fmt.Errorf("%s: Attr must be empty", s)
+	}
+	if j.Val != "" {
+		return fmt.Errorf("%s: Val must be empty", s)
+	}
+
+	for _, expr := range j.Exprs {
+		f, err := UnmarshalFilterAttr(expr)
+		if err != nil {
+			return err
+		}
+		fa.fa = f
+	}
+
 	return nil
 }
 
@@ -286,8 +398,33 @@ func (fa *FAAnd) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpAnd, Exprs: exprs})
 }
 
-// TODO: Implements TextUnmarshaler interface
-func (fa *FAAnd) UnmarshalText(text []byte) error {
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FAAnd) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FAAnd"
+	if j.Op != OpAnd {
+		return fmt.Errorf("%s: Op should be %s", s, OpAnd)
+	}
+	if len(j.Exprs) == 0 {
+		return fmt.Errorf("%s: Must have at least 1 Exprs", s)
+	}
+	if j.Attr != "" {
+		return fmt.Errorf("%s: Attr must be empty", s)
+	}
+	if j.Val != "" {
+		return fmt.Errorf("%s: Val must be empty", s)
+	}
+
+	fas := make([]FilterAttr, 0, len(j.Exprs))
+	for _, expr := range j.Exprs {
+		f, err := UnmarshalFilterAttr(expr)
+		if err != nil {
+			return err
+		}
+		fas = append(fas, f)
+	}
+	fa.fa = fas
+
 	return nil
 }
 
@@ -341,8 +478,33 @@ func (fa *FAOr) MarshalText() ([]byte, error) {
 	return json.Marshal(FilterAttrJson{Op: OpOr, Exprs: exprs})
 }
 
-// TODO: Implements TextUnmarshaler interface
-func (fa *FAOr) UnmarshalText(text []byte) error {
+// Unmarshals this object from a FilterAttrJson struct, returning an error
+// if the JSON struct doesn't have the correct fields.
+func (fa *FAOr) unmarshalStruct(j *FilterAttrJson) error {
+	s := "Invalid JSON for FAOr"
+	if j.Op != OpOr {
+		return fmt.Errorf("%s: Op should be %s", s, OpOr)
+	}
+	if len(j.Exprs) == 0 {
+		return fmt.Errorf("%s: Must have at least 1 Exprs", s)
+	}
+	if j.Attr != "" {
+		return fmt.Errorf("%s: Attr must be empty", s)
+	}
+	if j.Val != "" {
+		return fmt.Errorf("%s: Val must be empty", s)
+	}
+
+	fas := make([]FilterAttr, 0, len(j.Exprs))
+	for _, expr := range j.Exprs {
+		f, err := UnmarshalFilterAttr(expr)
+		if err != nil {
+			return err
+		}
+		fas = append(fas, f)
+	}
+	fa.fa = fas
+
 	return nil
 }
 

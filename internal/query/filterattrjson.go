@@ -26,13 +26,8 @@ type FilterAttrJson struct {
 	Exprs []json.RawMessage `json:"exprs,omitempty"`
 }
 
-// Implements TextMarshaler interface
-func (fa *FilterAttrJson) MarshalText() (text []byte, err error) {
-	return []byte(""), nil
-
-}
-
-// Implements TextUnmarshaler interface
-func (fa *FilterAttrJson) UnmarshalText(text []byte) error {
-	return nil
+func newFilterAttrJson() *FilterAttrJson {
+	j := FilterAttrJson{}
+	j.Exprs = make([]json.RawMessage, 0)
+	return &j
 }
