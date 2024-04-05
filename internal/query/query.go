@@ -1,6 +1,7 @@
 package query
 
 import (
+	"encoding/json"
 	"equinox/internal/core"
 	"fmt"
 	"time"
@@ -12,11 +13,11 @@ import (
 type Query struct {
 	Start time.Time
 	End   time.Time
-	QA    FilterAttr
+	FA    FilterAttr
 }
 
-func NewQuery(start time.Time, end time.Time, qa FilterAttr) *Query {
-	q := Query{Start: start, End: end, QA: qa}
+func NewQuery(start time.Time, end time.Time, fa FilterAttr) *Query {
+	q := Query{Start: start, End: end, FA: fa}
 
 	// ensure times are in correct order
 	if start.UnixMicro() > end.UnixMicro() {
@@ -28,7 +29,7 @@ func NewQuery(start time.Time, end time.Time, qa FilterAttr) *Query {
 
 // Returns string representation of the query
 func (q *Query) String() string {
-	return fmt.Sprintf("[%s-%s] [%s]", q.Start.UTC(), q.End.UTC(), q.QA.String())
+	return fmt.Sprintf("[%s-%s] [%s]", q.Start.UTC(), q.End.UTC(), q.FA.String())
 }
 
 // Checks whether the given point is within the time range specified by the
@@ -54,11 +55,57 @@ func (q *Query) MatchTime(p *core.Point) bool {
 // false otherwise. If the query has no attributes then all points will match.
 // Does not check the point against the time range.
 func (q *Query) MatchAttr(p *core.Point) bool {
-	return q.QA.Match(p.Attrs)
+	return q.FA.Match(p.Attrs)
 }
 
 // Returns true if the point matches both the time range and attributes specified
 // by this query, false otherwise.
 func (q *Query) Match(p *core.Point) bool {
 	return q.MatchTime(p) && q.MatchAttr(p)
+}
+
+// Marshals the query object into JSON
+func (q *Query) MarshalText() ([]byte, error) {
+	// first marshall the attribute filters
+	faj, err := q.FA.MarshalText()
+	if err != nil {
+		return []byte(""), nil
+	}
+
+	// now add the other struct elements
+	type qJson struct {
+		Start      time.Time       `json:"start"`
+		End        time.Time       `json:"end"`
+		FilterAttr json.RawMessage `json:"filterattr"`
+	}
+	s := qJson{Start: q.Start, End: q.End, FilterAttr: faj}
+	return json.Marshal(s)
+}
+
+// Unmarshals the query object from JSON
+func (q *Query) UnmarshalText(text []byte) error {
+	type qJson struct {
+		Start      time.Time       `json:"start"`
+		End        time.Time       `json:"end"`
+		FilterAttr json.RawMessage `json:"filterattr"`
+	}
+	var s qJson
+
+	// unmarshal the full query structure
+	err := json.Unmarshal(text, &s)
+	if err != nil {
+		return err
+	}
+
+	// unmarshal the contained filter attributes
+	fa, err := UnmarshalFilterAttr(s.FilterAttr)
+	if err != nil {
+		return err
+	}
+
+	// save all the data
+	q.Start = s.Start
+	q.End = s.End
+	q.FA = fa
+	return nil
 }
