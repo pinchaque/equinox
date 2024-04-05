@@ -1,8 +1,6 @@
 package query
 
 import (
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,20 +15,9 @@ func testGetAttrs() map[string]string {
 	return r
 }
 
-func testAttrsToString(attrs map[string]string) string {
-	var attr []string
-
-	for k, v := range attrs {
-		attr = append(attr, k+": "+v)
-	}
-	sort.Strings(attr) // ensure consistent output
-
-	return strings.Join(attr, ", ")
-}
-
 func TestAttrString(t *testing.T) {
 
-	fn := func(t *testing.T, q QueryAttr, exp string) {
+	fn := func(t *testing.T, q FilterAttr, exp string) {
 		assert.Equal(t, exp, q.String())
 	}
 
@@ -49,7 +36,7 @@ func TestAttrString(t *testing.T) {
 	fn(t, And(t2, Not(t3)), "(animal == 'moose') && (!(shape == 'square'))")
 }
 
-func runQATest(t *testing.T, attrs map[string]string, qa QueryAttr, exp bool) {
+func runQATest(t *testing.T, attrs map[string]string, qa FilterAttr, exp bool) {
 	assert.Equal(t, exp, qa.Match(attrs))
 }
 
@@ -206,4 +193,108 @@ func TestAttrLogicCombo(t *testing.T) {
 	runQATest(t, a, And(f5, f6, f7), false)
 	runQATest(t, a, Or(t5, t6, t7), true)
 	runQATest(t, a, And(t5, t6, t7), true)
+}
+
+func TestFilterAttrJson(t *testing.T) {
+	f := func(fa FilterAttr, exp string) {
+		// first test marshaling
+		b, err := fa.MarshalText()
+		assert.NoError(t, err)
+		assert.Equal(t, exp, string(b))
+
+		// now try unmarshaling that same string
+		fa2, err := UnmarshalFilterAttr([]byte(exp))
+		if !assert.NoError(t, err) {
+			return
+		}
+
+		// strings should be equal
+		assert.Equal(t, fa.String(), fa2.String())
+
+		// round trip should be equal
+		b, err = fa.MarshalText()
+		assert.NoError(t, err)
+		assert.Equal(t, exp, string(b))
+	}
+
+	// basic exprs
+	f(True(), `{"op":"true"}`)
+	f(Exists("color"), `{"op":"exists","attr":"color"}`)
+	f(Equal("color", "blue"), `{"op":"equal","attr":"color","val":"blue"}`)
+	f(Regex("animal", "mo{3,5}se"), `{"op":"regex","attr":"animal","val":"mo{3,5}se"}`)
+
+	// more complex exprs
+	e1 := Equal("color", "blue")
+	j1 := `{"op":"equal","attr":"color","val":"blue"}`
+	f(e1, j1)
+
+	e2 := Regex("animal", "mo{3,5}se")
+	j2 := `{"op":"regex","attr":"animal","val":"mo{3,5}se"}`
+	f(e2, j2)
+
+	f(Not(e1), `{"op":"not","exprs":[`+j1+`]}`)
+	f(Not(e2), `{"op":"not","exprs":[`+j2+`]}`)
+	f(Or(e2), `{"op":"or","exprs":[`+j2+`]}`)
+	f(Or(e2, e1), `{"op":"or","exprs":[`+j2+","+j1+`]}`)
+	f(And(e2, e1), `{"op":"and","exprs":[`+j2+","+j1+`]}`)
+
+	// even more complex
+	e3 := Or(e2, e1)
+	j3 := `{"op":"or","exprs":[` + j2 + "," + j1 + `]}`
+	f(e3, j3)
+	e4 := Not(e2)
+	j4 := `{"op":"not","exprs":[` + j2 + `]}`
+	f(e4, j4)
+	f(And(e3, e4), `{"op":"and","exprs":[`+j3+","+j4+`]}`)
+	f(Or(e3, e4, Not(True())), `{"op":"or","exprs":[`+j3+","+j4+`,{"op":"not","exprs":[{"op":"true"}]}]}`)
+}
+
+func TestFilterAttrJsonError(t *testing.T) {
+	f := func(s string, errmsg string) {
+		fa, err := UnmarshalFilterAttr([]byte(s))
+		if !assert.Error(t, err) {
+			return
+		}
+		if !assert.Nil(t, fa) {
+			return
+		}
+		assert.Equal(t, errmsg, err.Error())
+	}
+	tstr := `{"op":"true"}`
+	tstr1 := "[" + tstr + "]"
+	tstr2 := "[" + tstr + "," + tstr + "]"
+
+	f(`{"op":"true","attr":"color"}`, "Invalid JSON for FATrue: Attr must be empty")
+	f(`{"op":"true","val":"color"}`, "Invalid JSON for FATrue: Val must be empty")
+	f(`{"op":"true","exprs":`+tstr1+`}`, "Invalid JSON for FATrue: Exprs must be empty")
+	f(`{"op":"true","exprs":`+tstr2+`}`, "Invalid JSON for FATrue: Exprs must be empty")
+
+	f(`{"op":"exists"}`, "Invalid JSON for FAExists: Attr cannot be empty")
+	f(`{"op":"exists","attr":"color","val":"color"}`, "Invalid JSON for FAExists: Val must be empty")
+	f(`{"op":"exists","attr":"color","exprs":`+tstr1+`}`, "Invalid JSON for FAExists: Exprs must be empty")
+	f(`{"op":"exists","attr":"color","exprs":`+tstr2+`}`, "Invalid JSON for FAExists: Exprs must be empty")
+
+	f(`{"op":"equal"}`, "Invalid JSON for FAEqual: Attr cannot be empty")
+	f(`{"op":"equal","attr":"color"}`, "Invalid JSON for FAEqual: Val cannot be empty")
+	f(`{"op":"equal","attr":"color","val":"blue","exprs":`+tstr1+`}`, "Invalid JSON for FAEqual: Exprs must be empty")
+	f(`{"op":"equal","attr":"color","val":"blue","exprs":`+tstr2+`}`, "Invalid JSON for FAEqual: Exprs must be empty")
+
+	f(`{"op":"regex"}`, "Invalid JSON for FARegex: Attr cannot be empty")
+	f(`{"op":"regex","attr":"color"}`, "Invalid JSON for FARegex: Val cannot be empty")
+	f(`{"op":"regex","attr":"color","val":"[a"}`, "error parsing regexp: missing closing ]: `[a`")
+	f(`{"op":"regex","attr":"color","val":"blue","exprs":`+tstr1+`}`, "Invalid JSON for FARegex: Exprs must be empty")
+	f(`{"op":"regex","exprs":`+tstr2+`}`, "Invalid JSON for FARegex: Exprs must be empty")
+
+	f(`{"op":"not","exprs":[]}`, "Invalid JSON for FANot: Must have a single Exprs")
+	f(`{"op":"not","exprs":`+tstr1+`,"attr":"color"}`, "Invalid JSON for FANot: Attr must be empty")
+	f(`{"op":"not","exprs":`+tstr1+`,"val":"blue"}`, "Invalid JSON for FANot: Val must be empty")
+	f(`{"op":"not","exprs":`+tstr2+`}`, "Invalid JSON for FANot: Must have a single Exprs")
+
+	f(`{"op":"and","exprs":`+tstr1+`,"attr":"color"}`, "Invalid JSON for FAAnd: Attr must be empty")
+	f(`{"op":"and","exprs":`+tstr1+`,"val":"color"}`, "Invalid JSON for FAAnd: Val must be empty")
+	f(`{"op":"and","exprs":[]}`, "Invalid JSON for FAAnd: Must have at least 1 Exprs")
+
+	f(`{"op":"or","exprs":`+tstr1+`,"attr":"color"}`, "Invalid JSON for FAOr: Attr must be empty")
+	f(`{"op":"or","exprs":`+tstr1+`,"val":"color"}`, "Invalid JSON for FAOr: Val must be empty")
+	f(`{"op":"or","exprs":[]}`, "Invalid JSON for FAOr: Must have at least 1 Exprs")
 }

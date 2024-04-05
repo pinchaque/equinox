@@ -68,7 +68,7 @@ func TestQueryAttrs(t *testing.T) {
 		assert.Equal(t, exp_ts && exp_attr, q.Match(p))
 	}
 
-	fn := func(qa QueryAttr, exp_attr bool) {
+	fn := func(qa FilterAttr, exp_attr bool) {
 		// check a few different time ranges
 		fnsub(NewQuery(ts1, ts3, qa), true, exp_attr)
 		fnsub(NewQuery(ts1, ts1, qa), true, exp_attr)
@@ -104,4 +104,30 @@ func TestQueryAttrs(t *testing.T) {
 	fn(Or(And(f1, f2, f3, f4), Not(t1), Or(Not(f4), t2, t3)), true)
 	fn(Or(And(f1, f2, f3, f4), Not(t4), Or(Not(t4), f3)), false)
 
+}
+
+func TestJson(t *testing.T) {
+	t2 := time.Date(2024, 01, 12, 13, 0, 0, 0, time.UTC)
+	t4 := time.Date(2024, 01, 14, 13, 0, 0, 0, time.UTC)
+
+	q := NewQuery(t2, t4, True())
+
+	// test marshaling
+	b, err := q.MarshalText()
+	assert.Nil(t, err)
+	exp := `{"start":"2024-01-12T13:00:00Z","end":"2024-01-14T13:00:00Z","filterattr":{"op":"true"}}`
+	assert.Equal(t, exp, string(b))
+
+	// test unmarshaling
+	q2 := Query{}
+	err = q2.UnmarshalText([]byte(exp))
+	assert.Nil(t, err)
+	assert.Equal(t, q.Start, q2.Start)
+	assert.Equal(t, q.End, q2.End)
+	assert.Equal(t, q.String(), q2.String())
+
+	// remarshal round trip
+	b, err = q2.MarshalText()
+	assert.Nil(t, err)
+	assert.Equal(t, exp, string(b))
 }
