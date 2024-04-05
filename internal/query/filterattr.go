@@ -7,6 +7,34 @@ import (
 	"strings"
 )
 
+// Enum-style type to represent the allowed operators
+type FilterOp string
+
+const (
+	OpTrue   FilterOp = "true"
+	OpExists FilterOp = "exists"
+	OpEqual  FilterOp = "equal"
+	OpRegex  FilterOp = "regex"
+	OpAnd    FilterOp = "and"
+	OpOr     FilterOp = "or"
+	OpNot    FilterOp = "not"
+)
+
+// Helper data struct that is used to marshal/unmarshal the JSON representation
+// of FilterAttrs.
+type FilterAttrJson struct {
+	Op    FilterOp          `json:"op"`
+	Attr  string            `json:"attr,omitempty"`
+	Val   string            `json:"val,omitempty"`
+	Exprs []json.RawMessage `json:"exprs,omitempty"`
+}
+
+func newFilterAttrJson() *FilterAttrJson {
+	j := FilterAttrJson{}
+	j.Exprs = make([]json.RawMessage, 0)
+	return &j
+}
+
 // This is the generic interface for querying against attributes that is used
 // within the Query object as well as in composite attribute queries.
 type FilterAttr interface {
@@ -110,13 +138,13 @@ func (fa *FATrue) MarshalText() ([]byte, error) {
 func (fa *FATrue) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FATrue"
 	if j.Op != OpTrue {
-		return fmt.Errorf("%s: Op should be %s", s, OpTrue)
+		return fmt.Errorf("%s: Op must be %s", s, OpTrue)
 	}
 	if len(j.Exprs) != 0 {
-		return fmt.Errorf("%s: Exprs should be empty", s)
+		return fmt.Errorf("%s: Exprs must be empty", s)
 	}
 	if j.Attr != "" {
-		return fmt.Errorf("%s: Attr should be empty", s)
+		return fmt.Errorf("%s: Attr must be empty", s)
 	}
 	if j.Val != "" {
 		return fmt.Errorf("%s: Val must be empty", s)
@@ -159,10 +187,10 @@ func (fa *FAExists) MarshalText() ([]byte, error) {
 func (fa *FAExists) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FAExists"
 	if j.Op != OpExists {
-		return fmt.Errorf("%s: Op should be %s", s, OpExists)
+		return fmt.Errorf("%s: Op must be %s", s, OpExists)
 	}
 	if len(j.Exprs) != 0 {
-		return fmt.Errorf("%s: Exprs should be empty", s)
+		return fmt.Errorf("%s: Exprs must be empty", s)
 	}
 	if j.Attr == "" {
 		return fmt.Errorf("%s: Attr cannot be empty", s)
@@ -214,15 +242,17 @@ func (fa *FAEqual) MarshalText() ([]byte, error) {
 func (fa *FAEqual) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FAEqual"
 	if j.Op != OpEqual {
-		return fmt.Errorf("%s: Op should be %s", s, OpEqual)
+		return fmt.Errorf("%s: Op must be %s", s, OpEqual)
 	}
 	if len(j.Exprs) != 0 {
-		return fmt.Errorf("%s: Exprs should be empty", s)
+		return fmt.Errorf("%s: Exprs must be empty", s)
 	}
 	if j.Attr == "" {
 		return fmt.Errorf("%s: Attr cannot be empty", s)
 	}
-	// let val be empty or not
+	if j.Val == "" {
+		return fmt.Errorf("%s: Val cannot be empty", s)
+	}
 
 	fa.k = j.Attr
 	fa.v = j.Val
@@ -268,10 +298,10 @@ func (fa *FARegex) MarshalText() ([]byte, error) {
 func (fa *FARegex) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FARegex"
 	if j.Op != OpRegex {
-		return fmt.Errorf("%s: Op should be %s", s, OpRegex)
+		return fmt.Errorf("%s: Op must be %s", s, OpRegex)
 	}
 	if len(j.Exprs) != 0 {
-		return fmt.Errorf("%s: Exprs should be empty", s)
+		return fmt.Errorf("%s: Exprs must be empty", s)
 	}
 	if j.Attr == "" {
 		return fmt.Errorf("%s: Attr cannot be empty", s)
@@ -281,7 +311,11 @@ func (fa *FARegex) unmarshalStruct(j *FilterAttrJson) error {
 	}
 
 	fa.k = j.Attr
-	fa.re = regexp.MustCompile(j.Val)
+	re, err := regexp.Compile(j.Val)
+	if err != nil {
+		return err
+	}
+	fa.re = re
 	return nil
 }
 
@@ -325,7 +359,7 @@ func (fa *FANot) MarshalText() ([]byte, error) {
 func (fa *FANot) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FANot"
 	if j.Op != OpNot {
-		return fmt.Errorf("%s: Op should be %s", s, OpNot)
+		return fmt.Errorf("%s: Op must be %s", s, OpNot)
 	}
 	if len(j.Exprs) != 1 {
 		return fmt.Errorf("%s: Must have a single Exprs", s)
@@ -403,7 +437,7 @@ func (fa *FAAnd) MarshalText() ([]byte, error) {
 func (fa *FAAnd) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FAAnd"
 	if j.Op != OpAnd {
-		return fmt.Errorf("%s: Op should be %s", s, OpAnd)
+		return fmt.Errorf("%s: Op must be %s", s, OpAnd)
 	}
 	if len(j.Exprs) == 0 {
 		return fmt.Errorf("%s: Must have at least 1 Exprs", s)
@@ -483,7 +517,7 @@ func (fa *FAOr) MarshalText() ([]byte, error) {
 func (fa *FAOr) unmarshalStruct(j *FilterAttrJson) error {
 	s := "Invalid JSON for FAOr"
 	if j.Op != OpOr {
-		return fmt.Errorf("%s: Op should be %s", s, OpOr)
+		return fmt.Errorf("%s: Op must be %s", s, OpOr)
 	}
 	if len(j.Exprs) == 0 {
 		return fmt.Errorf("%s: Must have at least 1 Exprs", s)

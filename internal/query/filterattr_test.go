@@ -248,3 +248,53 @@ func TestFilterAttrJson(t *testing.T) {
 	f(And(e3, e4), `{"op":"and","exprs":[`+j3+","+j4+`]}`)
 	f(Or(e3, e4, Not(True())), `{"op":"or","exprs":[`+j3+","+j4+`,{"op":"not","exprs":[{"op":"true"}]}]}`)
 }
+
+func TestFilterAttrJsonError(t *testing.T) {
+	f := func(s string, errmsg string) {
+		fa, err := UnmarshalFilterAttr([]byte(s))
+		if !assert.Error(t, err) {
+			return
+		}
+		if !assert.Nil(t, fa) {
+			return
+		}
+		assert.Equal(t, errmsg, err.Error())
+	}
+	tstr := `{"op":"true"}`
+	tstr1 := "[" + tstr + "]"
+	tstr2 := "[" + tstr + "," + tstr + "]"
+
+	f(`{"op":"true","attr":"color"}`, "Invalid JSON for FATrue: Attr must be empty")
+	f(`{"op":"true","val":"color"}`, "Invalid JSON for FATrue: Val must be empty")
+	f(`{"op":"true","exprs":`+tstr1+`}`, "Invalid JSON for FATrue: Exprs must be empty")
+	f(`{"op":"true","exprs":`+tstr2+`}`, "Invalid JSON for FATrue: Exprs must be empty")
+
+	f(`{"op":"exists"}`, "Invalid JSON for FAExists: Attr cannot be empty")
+	f(`{"op":"exists","attr":"color","val":"color"}`, "Invalid JSON for FAExists: Val must be empty")
+	f(`{"op":"exists","attr":"color","exprs":`+tstr1+`}`, "Invalid JSON for FAExists: Exprs must be empty")
+	f(`{"op":"exists","attr":"color","exprs":`+tstr2+`}`, "Invalid JSON for FAExists: Exprs must be empty")
+
+	f(`{"op":"equal"}`, "Invalid JSON for FAEqual: Attr cannot be empty")
+	f(`{"op":"equal","attr":"color"}`, "Invalid JSON for FAEqual: Val cannot be empty")
+	f(`{"op":"equal","attr":"color","val":"blue","exprs":`+tstr1+`}`, "Invalid JSON for FAEqual: Exprs must be empty")
+	f(`{"op":"equal","attr":"color","val":"blue","exprs":`+tstr2+`}`, "Invalid JSON for FAEqual: Exprs must be empty")
+
+	f(`{"op":"regex"}`, "Invalid JSON for FARegex: Attr cannot be empty")
+	f(`{"op":"regex","attr":"color"}`, "Invalid JSON for FARegex: Val cannot be empty")
+	f(`{"op":"regex","attr":"color","val":"[a"}`, "error parsing regexp: missing closing ]: `[a`")
+	f(`{"op":"regex","attr":"color","val":"blue","exprs":`+tstr1+`}`, "Invalid JSON for FARegex: Exprs must be empty")
+	f(`{"op":"regex","exprs":`+tstr2+`}`, "Invalid JSON for FARegex: Exprs must be empty")
+
+	f(`{"op":"not","exprs":[]}`, "Invalid JSON for FANot: Must have a single Exprs")
+	f(`{"op":"not","exprs":`+tstr1+`,"attr":"color"}`, "Invalid JSON for FANot: Attr must be empty")
+	f(`{"op":"not","exprs":`+tstr1+`,"val":"blue"}`, "Invalid JSON for FANot: Val must be empty")
+	f(`{"op":"not","exprs":`+tstr2+`}`, "Invalid JSON for FANot: Must have a single Exprs")
+
+	f(`{"op":"and","exprs":`+tstr1+`,"attr":"color"}`, "Invalid JSON for FAAnd: Attr must be empty")
+	f(`{"op":"and","exprs":`+tstr1+`,"val":"color"}`, "Invalid JSON for FAAnd: Val must be empty")
+	f(`{"op":"and","exprs":[]}`, "Invalid JSON for FAAnd: Must have at least 1 Exprs")
+
+	f(`{"op":"or","exprs":`+tstr1+`,"attr":"color"}`, "Invalid JSON for FAOr: Attr must be empty")
+	f(`{"op":"or","exprs":`+tstr1+`,"val":"color"}`, "Invalid JSON for FAOr: Val must be empty")
+	f(`{"op":"or","exprs":[]}`, "Invalid JSON for FAOr: Must have at least 1 Exprs")
+}
