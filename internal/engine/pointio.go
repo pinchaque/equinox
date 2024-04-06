@@ -8,6 +8,7 @@ import (
 type PointIO interface {
 	Add(p ...*core.Point) error
 	Len() int
+	Flush() error
 	Vacuum() error
 	Search(q *query.Query) (*query.QueryExec, error)
 	Name() string

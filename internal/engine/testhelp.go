@@ -59,7 +59,9 @@ func getPointsShuffle(a uint32, n int) []*core.Point {
 }
 
 func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Point) {
-	assert.Equal(t, len(act), len(exp))
+	if !assert.Equal(t, len(act), len(exp)) {
+		return
+	}
 
 	// sort by ascending time
 	slices.SortFunc(exp, core.PointCmp)
@@ -145,7 +147,9 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 			pbatch = nil
 
 			// make sure first and last are kept updated
+			assert.NotNil(t, io.First())
 			assert.Equal(t, mints, io.First().Ts)
+			assert.NotNil(t, io.Last())
 			assert.Equal(t, maxts, io.Last().Ts)
 		}
 	}
@@ -156,7 +160,9 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 		pbatch = nil
 
 		// make sure first and last are kept updated
+		assert.NotNil(t, io.First())
 		assert.Equal(t, mints, io.First().Ts)
+		assert.NotNil(t, io.Last())
 		assert.Equal(t, maxts, io.Last().Ts)
 	}
 

@@ -114,6 +114,10 @@ func (ml *MemList) validate() error {
 	return nil
 }
 
+func (ml *MemList) Flush() error {
+	return nil
+}
+
 func (ml *MemList) Vacuum() error {
 	return nil
 }

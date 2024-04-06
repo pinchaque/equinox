@@ -82,6 +82,10 @@ func (mt *MemTree) Len() int {
 	return mt.buf.Len()
 }
 
+func (mt *MemTree) Flush() error {
+	return nil
+}
+
 func (mt *MemTree) Vacuum() error {
 	return nil
 }
