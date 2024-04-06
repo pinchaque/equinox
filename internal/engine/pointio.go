@@ -38,4 +38,7 @@ type PointIO interface {
 	// Moves all points in [start, end] to another storage engine, returning
 	// the number of points moved.
 	Move(start time.Time, end time.Time, dest PointIO) (int, error)
+
+	// Extracts all contained points, useful for debugging and testing
+	extract() ([]*core.Point, error)
 }

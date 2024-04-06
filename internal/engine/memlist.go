@@ -159,6 +159,14 @@ func (ml *MemList) Move(start time.Time, end time.Time, dest PointIO) (int, erro
 	return n, nil
 }
 
+func (ml *MemList) extract() ([]*core.Point, error) {
+	r := make([]*core.Point, 0, ml.buf.Len())
+	for e := ml.buf.Front(); e != nil; e = e.Next() {
+		r = append(r, e.Value.(*core.Point))
+	}
+	return r, nil
+}
+
 type MemListCursor struct {
 	e *list.Element // element where we start the search
 	q *query.Query  // query params

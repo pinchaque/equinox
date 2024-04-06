@@ -114,6 +114,10 @@ func (b *Buffered) Move(start time.Time, end time.Time, dest PointIO) (int, erro
 	return 0, fmt.Errorf("not implemented")
 }
 
+func (b *Buffered) extract() ([]*core.Point, error) {
+	return make([]*core.Point, 0), fmt.Errorf("not implemented")
+}
+
 type BufferedCursor struct {
 	buf    *Buffered        // reference to Buffered object
 	qebuf  *query.QueryExec // executing query on buf.Buf

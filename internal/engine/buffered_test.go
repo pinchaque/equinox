@@ -12,15 +12,7 @@ func createBuffered() PointIO {
 }
 
 func TestBufferedQuery(t *testing.T) {
-
-	testPointIO(t, createBuffered(), 10, 5)
-	testPointIO(t, createBuffered(), 10, 10)
-	testPointIO(t, createBuffered(), 10, 4)
-	testPointIO(t, createBuffered(), 10, 1)
-	testPointIO(t, createBuffered(), 100, 9)
-	testPointIO(t, createBuffered(), 100, 10)
-	testPointIO(t, createBuffered(), 1000, 49)
-	testPointIO(t, createBuffered(), 1000, 50)
+	testPointIOFull(t, func() PointIO { return createBuffered() })
 }
 
 func TestBufferedString(t *testing.T) {

@@ -58,6 +58,82 @@ func getPointsShuffle(a uint32, n int) []*core.Point {
 	return ps
 }
 
+// compares all extracted points from a PointIO to the expectd points
+func cmpPointIO(t *testing.T, exp []*core.Point, io PointIO, s string) {
+	if !assert.Equal(t, len(exp), io.Len(), "%s length", s) {
+		return
+	}
+
+	act, err := io.extract()
+	if !assert.Nil(t, err) {
+		return
+	}
+
+	for i := 0; i < len(exp); i++ {
+		assert.Equal(t, 0, core.PointCmp(exp[i], act[i]),
+			"%s point[%d]\nexpected %s\ngot %s",
+			s, i, exp[i].String(), act[i].String())
+	}
+}
+
+func testPointIOMove(t *testing.T, fact func() PointIO) {
+	f := func(n int, i int, j int) {
+		ml := fact()
+		ps := getPoints(0, n)
+		err := ml.Add(ps...)
+		assert.Nil(t, err)
+
+		cmpPointIO(t, ps, ml, "original")
+
+		ml2 := fact()
+
+		// first try moving no points
+		st := ps[n-1].Ts.Add(getDurMins(3))
+		en := ps[n-1].Ts.Add(getDurMins(13))
+		m, err := ml.Move(st, en, ml2)
+		if !assert.Nil(t, err) {
+			return
+		}
+		assert.Equal(t, 0, m)
+		cmpPointIO(t, ps, ml, "source")
+		cmpPointIO(t, make([]*core.Point, 0), ml2, "dest")
+
+		// now move the specified points
+		m, err = ml.Move(ps[i].Ts, ps[j].Ts, ml2)
+		if !assert.Nil(t, err) {
+			return
+		}
+		assert.Equal(t, j-i+1, m)
+
+		psrc := make([]*core.Point, 0)
+		if i > 0 {
+			psrc = append(psrc, ps[0:i]...)
+		}
+		if j < n-1 {
+			psrc = append(psrc, ps[j+1:n]...)
+		}
+
+		pdest := ps[i : j+1]
+
+		cmpPointIO(t, psrc, ml, "source")
+		cmpPointIO(t, pdest, ml2, "dest")
+	}
+
+	f(5, 0, 0) // first point
+	f(5, 0, 3) // first 4 points
+	f(5, 2, 4) // last 3 points
+	f(5, 0, 4) // all points
+
+	// test larger sizes
+	f(100, 31, 65) // mid
+	f(100, 0, 88)  // start
+	f(100, 28, 99) // end
+
+	f(1000, 314, 659) // mid
+	f(1000, 0, 888)   // start
+	f(1000, 283, 999) // end
+}
+
 func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Point) {
 	if !assert.Equal(t, len(act), len(exp)) {
 		return
@@ -175,4 +251,14 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 	testQuery(t, io, mints.Add(getDurMins(-60)), mints.Add(getDurMins(-1)), noresults)
 	testQuery(t, io, maxts.Add(getDurMins(1)), maxts.Add(getDurMins(60)), noresults)
 
+}
+
+func testPointIOFull(t *testing.T, fact func() PointIO) {
+	testPointIO(t, fact(), 10, 5)
+	testPointIO(t, fact(), 10, 10)
+	testPointIO(t, fact(), 10, 4)
+	testPointIO(t, fact(), 10, 1)
+	testPointIO(t, fact(), 100, 9)
+	testPointIO(t, fact(), 1000, 49)
+	testPointIO(t, fact(), 1000, 50)
 }
