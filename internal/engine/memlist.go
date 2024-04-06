@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 )
 
 // Maintains list of Points ordered by timestamp
@@ -120,6 +121,42 @@ func (ml *MemList) Flush() error {
 
 func (ml *MemList) Vacuum() error {
 	return nil
+}
+
+func (ml *MemList) Move(start time.Time, end time.Time, dest PointIO) (int, error) {
+	n := 0
+
+	e := ml.buf.Front()
+	for {
+		if e == nil {
+			break // end of list
+		}
+
+		p := e.Value.(*core.Point)
+
+		// we're past the specified range so we can stop
+		if p.Ts.UnixMicro() > end.UnixMicro() {
+			break
+		}
+
+		// we're before the specified range, so loop
+		if p.Ts.UnixMicro() < start.UnixMicro() {
+			e = e.Next()
+			continue
+		}
+
+		// move this point
+		err := dest.Add(p)
+		if err != nil {
+			return n, err
+		}
+		edel := e
+		e = e.Next()
+		ml.buf.Remove(edel)
+		n++
+	}
+
+	return n, nil
 }
 
 type MemListCursor struct {

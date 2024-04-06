@@ -110,6 +110,10 @@ func (b *Buffered) Vacuum() error {
 	return b.Archive.Vacuum()
 }
 
+func (b *Buffered) Move(start time.Time, end time.Time, dest PointIO) (int, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+
 type BufferedCursor struct {
 	buf    *Buffered        // reference to Buffered object
 	qebuf  *query.QueryExec // executing query on buf.Buf

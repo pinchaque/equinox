@@ -81,3 +81,74 @@ func TestMemListQuery(t *testing.T) {
 	testPointIO(t, NewMemList(), 1000, 49)
 	testPointIO(t, NewMemList(), 1000, 50)
 }
+
+func memListCmp(t *testing.T, exp []*core.Point, ml *MemList, s string) {
+	if !assert.Equal(t, len(exp), ml.Len(), "%s length", s) {
+		return
+	}
+
+	i := 0
+	for e := ml.buf.Front(); e != nil; e = e.Next() {
+		p := e.Value.(*core.Point)
+		assert.Equal(t, 0, core.PointCmp(exp[i], p), "%s point %d", s, i)
+		i++
+	}
+}
+
+func TestMemListMove(t *testing.T) {
+	f := func(n int, i int, j int) {
+		ml := NewMemList()
+		ps := getPoints(0, n)
+		err := ml.Add(ps...)
+		assert.Nil(t, err)
+
+		memListCmp(t, ps, ml, "original")
+
+		ml2 := NewMemList()
+
+		// first try moving no points
+		st := ps[n-1].Ts.Add(getDurMins(3))
+		en := ps[n-1].Ts.Add(getDurMins(13))
+		m, err := ml.Move(st, en, ml2)
+		if !assert.Nil(t, err) {
+			return
+		}
+		assert.Equal(t, 0, m)
+		memListCmp(t, ps, ml, "source")
+		memListCmp(t, make([]*core.Point, 0), ml2, "dest")
+
+		// now move the specified points
+		m, err = ml.Move(ps[i].Ts, ps[j].Ts, ml2)
+		if !assert.Nil(t, err) {
+			return
+		}
+		assert.Equal(t, j-i+1, m)
+
+		psrc := make([]*core.Point, 0)
+		if i > 0 {
+			psrc = append(psrc, ps[0:i]...)
+		}
+		if j < n-1 {
+			psrc = append(psrc, ps[j+1:n]...)
+		}
+
+		pdest := ps[i : j+1]
+
+		memListCmp(t, psrc, ml, "source")
+		memListCmp(t, pdest, ml2, "dest")
+	}
+
+	f(5, 0, 0) // first point
+	f(5, 0, 3) // first 4 points
+	f(5, 2, 4) // last 3 points
+	f(5, 0, 4) // all points
+
+	// test larger sizes
+	f(100, 31, 65) // mid
+	f(100, 0, 88)  // start
+	f(100, 28, 99) // end
+
+	f(1000, 314, 659) // mid
+	f(1000, 0, 888)   // start
+	f(1000, 283, 999) // end
+}

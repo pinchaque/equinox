@@ -90,6 +90,10 @@ func (mt *MemTree) Vacuum() error {
 	return nil
 }
 
+func (mt *MemTree) Move(start time.Time, end time.Time, dest PointIO) (int, error) {
+	return 0, fmt.Errorf("not implemented")
+}
+
 type MemTreeCursor struct {
 	mt   *MemTree     // reference to MemTree object
 	st   *core.Point  // point where we start the search
