@@ -96,7 +96,7 @@ func (b *Buffered) Flush() error {
 		(b) Add them to b.Archive
 		(c) Remove them from b.Buf
 
-		We need primitives on PointIO to make this possible
+		We need primitives on PointIO to make this possible.
 	*/
 	return nil
 }
@@ -117,16 +117,6 @@ type BufferedCursor struct {
 	ptbuf  *list.List       // point buffer that we fill for executing the query
 	q      *query.Query     // query params
 
-}
-
-// Helper function to add the specified points to ptbuf if they match the
-// query filters
-func (bc *BufferedCursor) addPoints(pts []*core.Point) {
-	for _, p := range pts {
-		if bc.q.Match(p) {
-			bc.ptbuf.PushBack(p)
-		}
-	}
 }
 
 // Fills ptbuf with points from the specified QueryExec. Ensures there are at
@@ -153,7 +143,11 @@ func (bc *BufferedCursor) fillPointBuf(qe *query.QueryExec, n int) error {
 			return err
 		}
 
-		bc.addPoints(pts)
+		for _, p := range pts {
+			// we assume the underlying engines are verifying the match so we
+			// accept the points as-is
+			bc.ptbuf.PushBack(p)
+		}
 
 		// we have enough - return now
 		if bc.ptbuf.Len() >= n {
