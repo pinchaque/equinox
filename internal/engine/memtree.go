@@ -62,6 +62,22 @@ func (mt *MemTree) Add(ps ...*core.Point) error {
 	return nil
 }
 
+func (mt *MemTree) First() *core.Point {
+	i, e := mt.buf.Min()
+	if !e {
+		return nil
+	}
+	return i
+}
+
+func (mt *MemTree) Last() *core.Point {
+	i, e := mt.buf.Max()
+	if !e {
+		return nil
+	}
+	return i
+}
+
 func (mt *MemTree) Len() int {
 	return mt.buf.Len()
 }

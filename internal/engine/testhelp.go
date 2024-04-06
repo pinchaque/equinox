@@ -117,6 +117,11 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 	var mints, maxts time.Time
 	var pbatch []*core.Point
 
+	// should be empty
+	assert.Equal(t, 0, io.Len())
+	assert.Nil(t, io.First())
+	assert.Nil(t, io.Last())
+
 	for i := 0; i < len(exp); i++ {
 		p := exp[i]
 
@@ -138,6 +143,10 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 			err = io.Add(pbatch...)
 			assert.Nil(t, err)
 			pbatch = nil
+
+			// make sure first and last are kept updated
+			assert.Equal(t, mints, io.First().Ts)
+			assert.Equal(t, maxts, io.Last().Ts)
 		}
 	}
 
@@ -145,6 +154,10 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 		io.Add(pbatch...)
 		assert.Nil(t, err)
 		pbatch = nil
+
+		// make sure first and last are kept updated
+		assert.Equal(t, mints, io.First().Ts)
+		assert.Equal(t, maxts, io.Last().Ts)
 	}
 
 	err = io.Vacuum()

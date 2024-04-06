@@ -12,4 +12,6 @@ type PointIO interface {
 	Search(q *query.Query) (*query.QueryExec, error)
 	Name() string
 	String() string
+	First() *core.Point
+	Last() *core.Point
 }

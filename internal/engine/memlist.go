@@ -81,6 +81,20 @@ func (ml *MemList) Add(ps ...*core.Point) error {
 	return nil
 }
 
+func (ml *MemList) First() *core.Point {
+	if ml.Len() == 0 {
+		return nil
+	}
+	return ml.buf.Front().Value.(*core.Point)
+}
+
+func (ml *MemList) Last() *core.Point {
+	if ml.Len() == 0 {
+		return nil
+	}
+	return ml.buf.Back().Value.(*core.Point)
+}
+
 func (ml *MemList) Len() int {
 	return ml.buf.Len()
 }
