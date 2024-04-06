@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"container/list"
 	"equinox/internal/core"
 	"equinox/internal/query"
 	"fmt"
@@ -88,24 +89,138 @@ func (b *Buffered) Len() int {
 }
 
 func (b *Buffered) Flush() error {
+	// TODO: need to implement this
+	/*
+		General plan:
+		(a) Iterate over all the elements of b.Buf that are older than b.Dur
+		(b) Add them to b.Archive
+		(c) Remove them from b.Buf
+
+		We need primitives on PointIO to make this possible
+	*/
 	return nil
 }
 
 func (b *Buffered) Vacuum() error {
-	return nil
+	err := b.Buf.Vacuum()
+	if err != nil {
+		return err
+	}
+
+	return b.Archive.Vacuum()
 }
 
 type BufferedCursor struct {
-	buf *Buffered    // reference to MemTree object
-	q   *query.Query // query params
+	buf    *Buffered        // reference to Buffered object
+	qebuf  *query.QueryExec // executing query on buf.Buf
+	qearch *query.QueryExec // executing query on buf.Archive
+	ptbuf  *list.List       // point buffer that we fill for executing the query
+	q      *query.Query     // query params
+
+}
+
+// Helper function to add the specified points to ptbuf if they match the
+// query filters
+func (bc *BufferedCursor) addPoints(pts []*core.Point) {
+	for _, p := range pts {
+		if bc.q.Match(p) {
+			bc.ptbuf.PushBack(p)
+		}
+	}
+}
+
+// Fills ptbuf with points from the specified QueryExec. Ensures there are at
+// least n points in ptbuf by the time it returns as long as there are that
+// many results to return from qe. In other words, ptbuf will only be <n if we
+// are at the end of the query results.
+// This function and ptbuf exists because we are always reading in batches from
+// the underlying data engines. If we read 100 points but only need 10 then we
+// use this buf to store the 90 we didn't use in that fetch.
+func (bc *BufferedCursor) fillPointBuf(qe *query.QueryExec, n int) error {
+	// nothing to do if we already have enough
+	if bc.ptbuf.Len() >= n {
+		return nil
+	}
+
+	// fetch from the QueryExec in batches of n
+	for {
+		if qe.Done() {
+			return nil
+		}
+
+		pts, err := qe.Fetch(n)
+		if err != nil {
+			return err
+		}
+
+		bc.addPoints(pts)
+
+		// we have enough - return now
+		if bc.ptbuf.Len() >= n {
+			return nil
+		}
+	}
 }
 
 func (bc *BufferedCursor) Fetch(n int) ([]*core.Point, error) {
-	return nil, nil
+	// prealloc buffer for points
+	r := make([]*core.Point, 0, n)
+
+	// nothing to do
+	if n <= 0 {
+		return r, nil
+	}
+
+	// Fill up the point buffer from Archive and then Buf. Note that this
+	// will exhaust Archive before using Buf.
+	err := bc.fillPointBuf(bc.qearch, n)
+	if err != nil {
+		return r, err
+	}
+
+	err = bc.fillPointBuf(bc.qebuf, n)
+	if err != nil {
+		return r, err
+	}
+
+	// Now we fill r from ptbuf by popping elements off the front.
+	// Note that we might not have enough points in ptbuf if we are at the end
+	// of the result list. Or we might have more than enough.
+	for {
+		e := bc.ptbuf.Front()
+		if e == nil {
+			break // empty list
+		}
+
+		// remove the first point
+		p := bc.ptbuf.Remove(e).(*core.Point)
+
+		// add it to the results we'll return
+		r = append(r, p)
+
+		// if we have enough results then we can return them
+		if len(r) >= n {
+			break
+		}
+	}
+
+	// return what we got - may be less than n
+	return r, nil
 }
 
 func (b *Buffered) Search(q *query.Query) (*query.QueryExec, error) {
-	bc := &BufferedCursor{buf: b, q: q}
+	// initialize the queries across the archive and buffer
+	qearch, err := b.Archive.Search(q)
+	if err != nil {
+		return nil, err
+	}
+
+	qebuf, err := b.Buf.Search(q)
+	if err != nil {
+		return nil, err
+	}
+
+	bc := &BufferedCursor{buf: b, q: q, qebuf: qebuf, qearch: qearch, ptbuf: list.New()}
 	return query.NewQueryExec(q, bc), nil
 
 }
