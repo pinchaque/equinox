@@ -91,11 +91,46 @@ func (mt *MemTree) Vacuum() error {
 }
 
 func (mt *MemTree) Move(start time.Time, end time.Time, dest PointIO) (int, error) {
-	return 0, fmt.Errorf("not implemented")
+
+	st := core.NewPointEmptyId(start)
+
+	// ending point needs to be one microsecond past the query since
+	// AscendRange uses < not <=
+	en := core.NewPointEmptyId(time.UnixMicro(end.UnixMicro() + 1))
+
+	// first we build the list of points we are moving
+	pts := make([]*core.Point, 0)
+	iter := func(p *core.Point) bool {
+		pts = append(pts, p)
+		return true
+	}
+	mt.buf.AscendRange(st, en, iter)
+
+	// now we move each point
+	n := 0
+	for _, p := range pts {
+		err := dest.Add(p)
+		if err != nil {
+			return n, err
+		}
+		n++
+		mt.buf.Delete(p)
+	}
+
+	return n, nil
 }
 
 func (mt *MemTree) extract() ([]*core.Point, error) {
-	return make([]*core.Point, 0), fmt.Errorf("not implemented")
+	r := make([]*core.Point, 0, mt.Len())
+
+	iter := func(p *core.Point) bool {
+		r = append(r, p)
+		return true
+	}
+
+	mt.buf.Ascend(iter)
+
+	return r, nil
 }
 
 type MemTreeCursor struct {

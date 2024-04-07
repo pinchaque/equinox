@@ -127,7 +127,7 @@ func testCmpPointIO(t *testing.T, exp []*core.Point, io PointIO, s string) {
 }
 
 func testCmpPointSlice(t *testing.T, exp []*core.Point, act []*core.Point, s string) {
-	if !assert.Equal(t, len(act), len(exp)) {
+	if !assert.Equal(t, len(act), len(exp), s) {
 		return
 	}
 
