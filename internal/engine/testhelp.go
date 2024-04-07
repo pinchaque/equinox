@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getDurMins(i int) time.Duration {
+func testGetDurMins(i int) time.Duration {
 	dur, err := time.ParseDuration(fmt.Sprintf("%dm", i))
 	if err != nil {
 		panic(err)
@@ -21,7 +21,7 @@ func getDurMins(i int) time.Duration {
 	return dur
 }
 
-func getPoint(i uint32) *core.Point {
+func testGetPoint(i uint32) *core.Point {
 	ts := time.Date(2024, 01, 10, 23, 1, 2, 0, time.UTC)
 
 	s := rand.NewSource(ts.Unix()) // always use the same seed
@@ -31,7 +31,7 @@ func getPoint(i uint32) *core.Point {
 	shapes := [...]string{"circle", "square", "rhombus", "rectangle", "triangle", "pentagon"}
 	colors := [...]string{"red", "green", "blue", "yellow", "orange", "purple", "pink", "gray", "black", "white"}
 
-	p := core.NewPoint(ts.Add(getDurMins(int(i))))
+	p := core.NewPoint(ts.Add(testGetDurMins(int(i))))
 	p.Attrs["color"] = colors[r.Intn(len(colors))]
 	p.Attrs["shape"] = shapes[r.Intn(len(shapes))]
 	p.Attrs["animal"] = animals[r.Intn(len(animals))]
@@ -41,62 +41,44 @@ func getPoint(i uint32) *core.Point {
 }
 
 // gets n points starting at a, in random order
-func getPoints(a uint32, n int) []*core.Point {
+func testGetPoints(a uint32, n int) []*core.Point {
 	var ps []*core.Point
 
 	for i := 0; i < n; i++ {
-		ps = append(ps, getPoint(uint32(i)+a))
+		ps = append(ps, testGetPoint(uint32(i)+a))
 	}
 
 	return ps
 }
 
 // gets n points starting at a, in random order
-func getPointsShuffle(a uint32, n int) []*core.Point {
-	ps := getPoints(a, n)
+func testGetPointsShuffle(a uint32, n int) []*core.Point {
+	ps := testGetPoints(a, n)
 	rand.Shuffle(n, func(i, j int) { ps[i], ps[j] = ps[j], ps[i] })
 	return ps
-}
-
-// compares all extracted points from a PointIO to the expectd points
-func cmpPointIO(t *testing.T, exp []*core.Point, io PointIO, s string) {
-	if !assert.Equal(t, len(exp), io.Len(), "%s length", s) {
-		return
-	}
-
-	act, err := io.extract()
-	if !assert.Nil(t, err) {
-		return
-	}
-
-	for i := 0; i < len(exp); i++ {
-		assert.Equal(t, 0, core.PointCmp(exp[i], act[i]),
-			"%s point[%d]\nexpected %s\ngot %s",
-			s, i, exp[i].String(), act[i].String())
-	}
 }
 
 func testPointIOMove(t *testing.T, fact func() PointIO) {
 	f := func(n int, i int, j int) {
 		ml := fact()
-		ps := getPoints(0, n)
+		ps := testGetPoints(0, n)
 		err := ml.Add(ps...)
 		assert.Nil(t, err)
 
-		cmpPointIO(t, ps, ml, "original")
+		testCmpPointIO(t, ps, ml, "original")
 
 		ml2 := fact()
 
 		// first try moving no points
-		st := ps[n-1].Ts.Add(getDurMins(3))
-		en := ps[n-1].Ts.Add(getDurMins(13))
+		st := ps[n-1].Ts.Add(testGetDurMins(3))
+		en := ps[n-1].Ts.Add(testGetDurMins(13))
 		m, err := ml.Move(st, en, ml2)
 		if !assert.Nil(t, err) {
 			return
 		}
 		assert.Equal(t, 0, m)
-		cmpPointIO(t, ps, ml, "source")
-		cmpPointIO(t, make([]*core.Point, 0), ml2, "dest")
+		testCmpPointIO(t, ps, ml, "source")
+		testCmpPointIO(t, make([]*core.Point, 0), ml2, "dest")
 
 		// now move the specified points
 		m, err = ml.Move(ps[i].Ts, ps[j].Ts, ml2)
@@ -115,8 +97,8 @@ func testPointIOMove(t *testing.T, fact func() PointIO) {
 
 		pdest := ps[i : j+1]
 
-		cmpPointIO(t, psrc, ml, "source")
-		cmpPointIO(t, pdest, ml2, "dest")
+		testCmpPointIO(t, psrc, ml, "source")
+		testCmpPointIO(t, pdest, ml2, "dest")
 	}
 
 	f(5, 0, 0) // first point
@@ -134,7 +116,17 @@ func testPointIOMove(t *testing.T, fact func() PointIO) {
 	f(1000, 283, 999) // end
 }
 
-func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Point) {
+// compares all extracted points from a PointIO to the expectd points
+func testCmpPointIO(t *testing.T, exp []*core.Point, io PointIO, s string) {
+	act, err := io.extract()
+	if !assert.Nil(t, err) {
+		return
+	}
+	testCmpPointSlice(t, exp, act, s)
+
+}
+
+func testCmpPointSlice(t *testing.T, exp []*core.Point, act []*core.Point, s string) {
 	if !assert.Equal(t, len(act), len(exp)) {
 		return
 	}
@@ -145,7 +137,9 @@ func cmpQResults(t *testing.T, q *query.Query, exp []*core.Point, act []*core.Po
 
 	// now compare one at a time
 	for i := 0; i < len(exp); i++ {
-		assert.True(t, exp[i].Equal(act[i]))
+		assert.Equal(t, 0, core.PointCmp(exp[i], act[i]),
+			"%s point[%d]\nexpected %s\ngot %s",
+			s, i, exp[i].String(), act[i].String())
 	}
 }
 
@@ -184,11 +178,11 @@ func testQuery(t *testing.T, io PointIO, mints time.Time, maxts time.Time, exp [
 		results = append(results, rbatch...)
 	}
 
-	cmpQResults(t, q, exp, results)
+	testCmpPointSlice(t, exp, results, q.String())
 }
 
 func testPointIO(t *testing.T, io PointIO, n int, batch int) {
-	exp := getPointsShuffle(0, n)
+	exp := testGetPointsShuffle(0, n)
 	t.Logf("testing %s with %d points and batch size %d", io.Name(), n, batch)
 
 	var err error
@@ -245,11 +239,15 @@ func testPointIO(t *testing.T, io PointIO, n int, batch int) {
 	err = io.Vacuum()
 	assert.Nil(t, err)
 
+	all, err := io.extract()
+	assert.Nil(t, err)
+	testCmpPointSlice(t, exp, all, fmt.Sprintf("%s extract", io.Name()))
+
 	// basic query should return all
 	testQuery(t, io, mints, maxts, exp)
 	noresults := make([]*core.Point, 0)
-	testQuery(t, io, mints.Add(getDurMins(-60)), mints.Add(getDurMins(-1)), noresults)
-	testQuery(t, io, maxts.Add(getDurMins(1)), maxts.Add(getDurMins(60)), noresults)
+	testQuery(t, io, mints.Add(testGetDurMins(-60)), mints.Add(testGetDurMins(-1)), noresults)
+	testQuery(t, io, maxts.Add(testGetDurMins(1)), maxts.Add(testGetDurMins(60)), noresults)
 
 }
 

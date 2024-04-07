@@ -19,7 +19,7 @@ func TestBufferedString(t *testing.T) {
 	mt := createBuffered()
 	assert.Equal(t, "Buffered", mt.Name())
 
-	mt.Add(getPoints(5, 2)...)
+	mt.Add(testGetPoints(5, 2)...)
 	exp := `Buffered MemTree to MemList with 15m0s delay
 MemTree: {
 0: [2024-01-10 23:06:02 +0000 UTC] val[area: -0.958924, temp: 0.283662] attr[animal: pig, color: purple, shape: circle]
@@ -34,7 +34,7 @@ MemList: {
 
 func TestBufferedConstructBasic(t *testing.T) {
 	mt := createBuffered()
-	ps := getPoints(0, 10)
+	ps := testGetPoints(0, 10)
 
 	assert.Equal(t, 0, mt.Len())
 

@@ -9,7 +9,7 @@ import (
 
 func TestMemListConstructBasic(t *testing.T) {
 	ml := NewMemList()
-	ps := getPoints(0, 10)
+	ps := testGetPoints(0, 10)
 	var err error
 	assert.Equal(t, 0, ml.Len())
 
@@ -35,7 +35,7 @@ func TestMemListString(t *testing.T) {
 
 	assert.Equal(t, "MemList", ml.Name())
 
-	ml.Add(getPoints(5, 2)...)
+	ml.Add(testGetPoints(5, 2)...)
 	exp := `MemList: {
 0: [2024-01-10 23:06:02 +0000 UTC] val[area: -0.958924, temp: 0.283662] attr[animal: pig, color: purple, shape: circle]
 1: [2024-01-10 23:07:02 +0000 UTC] val[area: -0.279415, temp: 0.960170] attr[animal: pig, color: purple, shape: circle]
@@ -45,7 +45,7 @@ func TestMemListString(t *testing.T) {
 
 func TestMemListConstructBatches(t *testing.T) {
 	ml := NewMemList()
-	ps := getPoints(0, 100)
+	ps := testGetPoints(0, 100)
 	batch := 10
 	var err error
 	var pbatch []*core.Point
