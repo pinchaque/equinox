@@ -15,6 +15,10 @@ func TestBufferedQuery(t *testing.T) {
 	testPointIOFull(t, func() PointIO { return createBuffered() })
 }
 
+func TestBufferedMove(t *testing.T) {
+	testPointIOMove(t, func() PointIO { return createBuffered() })
+}
+
 func TestBufferedString(t *testing.T) {
 	mt := createBuffered()
 	assert.Equal(t, "Buffered", mt.Name())

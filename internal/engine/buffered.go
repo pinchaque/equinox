@@ -89,16 +89,19 @@ func (b *Buffered) Len() int {
 }
 
 func (b *Buffered) Flush() error {
-	// TODO: need to implement this
-	/*
-		General plan:
-		(a) Iterate over all the elements of b.Buf that are older than b.Dur
-		(b) Add them to b.Archive
-		(c) Remove them from b.Buf
 
-		We need primitives on PointIO to make this possible.
-	*/
-	return nil
+	// the date range we consider moving is everything from the start of buffer
+	// to b.Dur ago
+	start := b.Buf.First().Ts
+	end := time.Now().UTC().Add(-b.Dur)
+
+	// nothing to do if start is after end
+	if start.Compare(end) == 1 {
+		return nil
+	}
+
+	_, err := b.Buf.Move(start, end, b.Archive)
+	return err
 }
 
 func (b *Buffered) Vacuum() error {
@@ -111,11 +114,39 @@ func (b *Buffered) Vacuum() error {
 }
 
 func (b *Buffered) Move(start time.Time, end time.Time, dest PointIO) (int, error) {
-	return 0, fmt.Errorf("not implemented")
+
+	narch, err := b.Archive.Move(start, end, dest)
+	if err != nil {
+		return narch, err
+	}
+
+	nbuf, err := b.Buf.Move(start, end, dest)
+
+	return narch + nbuf, err
 }
 
 func (b *Buffered) extract() ([]*core.Point, error) {
-	return make([]*core.Point, 0), fmt.Errorf("not implemented")
+	r := make([]*core.Point, 0, b.Len())
+
+	// archive first
+	{
+		pts, err := b.Archive.extract()
+		if err != nil {
+			return make([]*core.Point, 0), err
+		}
+		r = append(r, pts...)
+	}
+
+	// buf second
+	{
+		pts, err := b.Buf.extract()
+		if err != nil {
+			return make([]*core.Point, 0), err
+		}
+		r = append(r, pts...)
+	}
+
+	return r, nil
 }
 
 type BufferedCursor struct {
