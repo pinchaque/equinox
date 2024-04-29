@@ -89,6 +89,10 @@ func (b *Buffered) Len() int {
 }
 
 func (b *Buffered) Flush() error {
+	// nothing to do with empty buffer
+	if b.Buf.Len() == 0 {
+		return nil
+	}
 
 	// the date range we consider moving is everything from the start of buffer
 	// to b.Dur ago
